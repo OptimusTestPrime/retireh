@@ -121,10 +121,27 @@
             </div>
             <label>Monthly Contribution ($):</label><input type="number" id="monthlyContribution" value="0">
         </div>
-
+        
         <!-- Section 4 -->
         <div class="form-section">
-            <h2>4. Pension Selection</h2>
+            <h2>4. Government Benefits (CPP & OAS)</h2>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>CPP Start Age (60-70):</label>
+                    <span class="note">Reduced before 65, increased after 65.</span>
+                    <input type="number" id="cppStartAge" value="65" min="60" max="70">
+                </div>
+                <div class="flex-col">
+                    <label>OAS Start Age (65-70):</label>
+                    <span class="note">Increased after 65. Cannot start before 65.</span>
+                    <input type="number" id="oasStartAge" value="65" min="65" max="70">
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5 -->
+        <div class="form-section">
+            <h2>5. Employer Pension Selection</h2>
             <label>Employer Pension Type:</label>
             <select id="pensionType" onchange="togglePensionFields()">
                 <option value="none">No Employer Pension</option>
@@ -135,7 +152,7 @@
             <div id="pensionDetails" class="pension-box">
                 <div class="flex-row">
                     <div class="flex-col">
-                        <label>Age to Start Pension:</label>
+                        <label>Age to Start Employer Pension:</label>
                         <span class="note">Deferring collection can remove early penalties.</span>
                         <input type="number" id="pensionStartAge" value="60">
                     </div>
@@ -155,9 +172,9 @@
             </div>
         </div>
 
-        <!-- Section 5 -->
+        <!-- Section 6 -->
         <div class="form-section">
-            <h2>5. Income Goal</h2>
+            <h2>6. Income Goal</h2>
             <label>Desired Annual After-Tax Take-Home ($):</label>
             <span class="note">The engine automatically gross-up withdrawals to cover your tax bill.</span>
             <input type="number" id="desiredIncome" value="60000">
@@ -186,10 +203,16 @@
         <h3>Economic Logic</h3>
         <ul>
             <li><strong>Growth & Inflation:</strong> These rates are specified by you. Your desired net income and expected government benefits are adjusted annually by the inflation rate to maintain your purchasing power over decades.</li>
-            <li><strong>CPP & OAS:</strong> The calculator assumes a combined, non-clawed-back base estimate of ~$21,000/year (in today's dollars) starting at age 65.</li>
+        </ul>
+        
+        <h3>Government Benefits (CPP & OAS) Timing</h3>
+        <ul>
+            <li><strong>Strategy:</strong> You can choose when to start your benefits. Delaying them can significantly increase your retirement income and minimize lifetime taxes.</li>
+            <li><strong>CPP (Canada Pension Plan):</strong> Can be started between age 60 and 70. Starting early permanently reduces your pension by 7.2% per year before 65. Delaying increases it by 8.4% per year after 65. We assume an average base payout of ~$11,500/year (today's dollars) at age 65.</li>
+            <li><strong>OAS (Old Age Security):</strong> Can be started between age 65 and 70. Delaying increases the payout by 7.2% per year after 65. We assume a full base payout of ~$9,100/year (today's dollars) at age 65.</li>
         </ul>
 
-        <h3>Pension Rules</h3>
+        <h3>Employer Pension Rules</h3>
         <ul>
             <li><strong>Federal (PSSA):</strong> Applies a 5% penalty per year if you collect before age 60 (Group 1) or 65 (Group 2), unless you have 30 years of service. An estimated bridge benefit is paid until age 65.</li>
             <li><strong>Provincial (85 Factor):</strong> Applies a 3% penalty for every year you are short of reaching 85 points (Age + Years of Service) or age 65, whichever penalty is smaller.</li>
@@ -240,6 +263,10 @@ function runRetirementSimulation() {
     const lifeExp = parseInt(document.getElementById('lifeExpectancy').value);
     let penStartAge = parseInt(document.getElementById('pensionStartAge').value) || retAge;
     
+    // Government Benefits Start Ages
+    const cppStartAge = parseInt(document.getElementById('cppStartAge').value) || 65;
+    const oasStartAge = parseInt(document.getElementById('oasStartAge').value) || 65;
+
     // Growth Rates from user inputs
     const inf = parseFloat(document.getElementById('inflationRate').value) / 100;
     const returnPre = parseFloat(document.getElementById('returnPre').value) / 100;
@@ -258,8 +285,11 @@ function runRetirementSimulation() {
 
     const yrsToRet = retAge - curAge;
 
+    // Validation
     if (yrsToRet < 0 || lifeExp <= retAge) return alert("Ages are illogical.");
     if (penStartAge < retAge) return alert("You cannot start collecting a pension before you stop working.");
+    if (cppStartAge < 60 || cppStartAge > 70) return alert("CPP start age must be between 60 and 70.");
+    if (oasStartAge < 65 || oasStartAge > 70) return alert("OAS start age must be between 65 and 70.");
 
     // Accumulation logic
     for(let i=0; i<yrsToRet*12; i++){
@@ -270,7 +300,7 @@ function runRetirementSimulation() {
     let totalSavedAtRetirement = rrsp + tfsa + nonReg;
     let formattedSavings = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(totalSavedAtRetirement);
 
-    // Penalty Calculation
+    // Employer Pension Penalty Calculation
     let mult = 1.0;
     let pText = "";
     
@@ -283,22 +313,22 @@ function runRetirementSimulation() {
             let penaltyYrs = target - penStartAge;
             let penaltyPct = Math.round(penaltyYrs * 5);
             mult = 1.0 - (penaltyYrs * 0.05);
-            pText = `<strong>Pension Penalty Applied:</strong> A <span style="color:var(--danger)">${penaltyPct}% reduction</span> was applied to your federal pension because you chose to start collecting ${penaltyYrs} year(s) before age ${target} (without meeting the 30-year unreduced service rule).`;
+            pText = `<strong>Employer Pension Penalty:</strong> A <span style="color:var(--danger)">${penaltyPct}% reduction</span> was applied to your federal pension because you chose to start collecting ${penaltyYrs} year(s) before age ${target} (without meeting the 30-year unreduced service rule).`;
         } else if (penStartAge > retAge) {
-            pText = `<strong>Pension Deferred:</strong> You deferred collecting your pension to age ${penStartAge}, successfully avoiding early withdrawal penalties you may have faced at age ${retAge}.`;
+            pText = `<strong>Employer Pension Deferred:</strong> You deferred collecting your pension to age ${penStartAge}, avoiding early withdrawal penalties.`;
         } else {
-            pText = `<strong>Unreduced Pension:</strong> You met the criteria for a full, unreduced federal pension!`;
+            pText = `<strong>Unreduced Employer Pension:</strong> You met the criteria for a full, unreduced federal pension!`;
         }
     } else if(penType === 'provincial'){
         if(penStartAge < 65 && (retAge + yos) < 85){
             let penaltyYrs = Math.min(85 - (retAge + yos), 65 - penStartAge);
             let penaltyPct = Math.round(penaltyYrs * 3);
             mult = 1.0 - (penaltyYrs * 0.03);
-            pText = `<strong>Pension Penalty Applied:</strong> A <span style="color:var(--danger)">${penaltyPct}% reduction</span> was applied to your provincial pension because you did not meet the 85-factor or age 65 when you started collection.`;
+            pText = `<strong>Employer Pension Penalty:</strong> A <span style="color:var(--danger)">${penaltyPct}% reduction</span> was applied to your provincial pension because you did not meet the 85-factor or age 65 when you started collection.`;
         } else if (penStartAge > retAge) {
-            pText = `<strong>Pension Deferred:</strong> You deferred collecting your pension to age ${penStartAge}, which adjusted or eliminated your early retirement penalty.`;
+            pText = `<strong>Employer Pension Deferred:</strong> You deferred collecting your pension to age ${penStartAge}, which adjusted or eliminated your early retirement penalty.`;
         } else {
-            pText = `<strong>Unreduced Pension:</strong> You successfully met the 85-factor (or age 65) for a full, unreduced provincial pension!`;
+            pText = `<strong>Unreduced Employer Pension:</strong> You successfully met the 85-factor (or age 65) for a full, unreduced provincial pension!`;
         }
     } else {
         pText = `<strong>No Employer Pension:</strong> Your plan relies entirely on government benefits and your personal savings.`;
@@ -306,22 +336,48 @@ function runRetirementSimulation() {
     
     mult = Math.max(0.1, mult);
 
+    // Calculate CPP Multiplier
+    let cppMultiplier = 1.0;
+    if (cppStartAge < 65) {
+        cppMultiplier = 1.0 - ((65 - cppStartAge) * 0.072);
+    } else if (cppStartAge > 65) {
+        cppMultiplier = 1.0 + ((cppStartAge - 65) * 0.084);
+    }
+
+    // Calculate OAS Multiplier
+    let oasMultiplier = 1.0;
+    if (oasStartAge > 65) {
+        oasMultiplier = 1.0 + ((oasStartAge - 65) * 0.072);
+    }
+
+    const baseCPP = 11500;
+    const baseOAS = 9100;
+    const adjustedCPP = baseCPP * cppMultiplier;
+    const adjustedOAS = baseOAS * oasMultiplier;
+
     let targetNet = goal * Math.pow(1+inf, yrsToRet);
     let pBase = (0.02 * yos * b5 * mult) * Math.pow(1+inf, yrsToRet);
     let pDrop = (0.00625 * yos * 73000 * mult) * Math.pow(1+inf, yrsToRet);
 
     let simAge = retAge;
     let ranOutAge = null;
-    const labels=[], cppData=[], penData=[], nrD=[], rD=[], tD=[], targetLine=[];
+    const labels=[], cppOasData=[], penData=[], nrD=[], rD=[], tD=[], targetLine=[];
 
     while(simAge <= lifeExp){
         labels.push(`Age ${simAge}`);
         targetLine.push(targetNet);
         
         let pInc = (penType !== 'none' && simAge >= penStartAge) ? (simAge >= 65 ? Math.max(0, pBase - pDrop) : pBase) : 0;
-        let cInc = (simAge >= 65) ? (21000 * Math.pow(1+inf, simAge - curAge)) : 0;
         
-        penData.push(pInc); cppData.push(cInc);
+        let cInc = 0;
+        if (simAge >= cppStartAge) {
+            cInc += adjustedCPP * Math.pow(1+inf, simAge - curAge);
+        }
+        if (simAge >= oasStartAge) {
+            cInc += adjustedOAS * Math.pow(1+inf, simAge - curAge);
+        }
+        
+        penData.push(pInc); cppOasData.push(cInc);
 
         let dNR=0, dR=0, dT=0;
         let taxableSum = pInc + cInc;
@@ -348,10 +404,14 @@ function runRetirementSimulation() {
     const tr = document.getElementById('textResults');
     tr.className = '';
     
+    let cppText = cppStartAge !== 65 ? `You chose to start CPP at age ${cppStartAge}, adjusting your base payment.` : `CPP starts at the standard age 65.`;
+    let oasText = oasStartAge !== 65 ? `You deferred OAS to age ${oasStartAge}, increasing your base payment.` : `OAS starts at the standard age 65.`;
+
     const summaryHtml = `
         <ul class="summary-list">
             <li><strong>Total Personal Savings at Retirement:</strong> ${formattedSavings}</li>
             <li>${pText}</li>
+            <li><strong>Government Benefits Timing:</strong> ${cppText} ${oasText}</li>
         </ul>
     `;
     
@@ -377,7 +437,7 @@ function runRetirementSimulation() {
         type: 'bar',
         data: { labels: labels, datasets: [
             { type: 'line', label: 'Goal Net', data: targetLine, borderColor: '#2ecc71', borderWidth: 3, pointRadius:0 },
-            { label: 'CPP + OAS', data: cppData, backgroundColor: '#f1c40f', stack: 'a' },
+            { label: 'CPP + OAS', data: cppOasData, backgroundColor: '#f1c40f', stack: 'a' },
             { label: 'Employer Pension', data: penData, backgroundColor: '#e67e22', stack: 'a' },
             { label: 'Withdraw Non-Reg', data: nrD, backgroundColor: '#3498db', stack: 'a' },
             { label: 'Withdraw RRSP', data: rD, backgroundColor: '#9b59b6', stack: 'a' },

@@ -23,7 +23,7 @@
         h2 { color: #2980b9; font-size: 1.3rem; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .form-section { background: #f9fbfd; border-left: 5px solid var(--secondary); padding: 20px; margin-bottom: 25px; border-radius: 4px; }
         .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
-        .flex-col { flex: 1; min-width: 220px; }
+        .flex-col { flex: 1; min-width: 200px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; font-size: 0.95rem; }
         select, input[type="number"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccd1d9; border-radius: 6px; box-sizing: border-box; font-size: 16px; background: #fff; }
         
@@ -34,13 +34,11 @@
         .btn-main { display: block; width: 100%; padding: 18px; background: var(--success); color: #fff; border: none; font-size: 20px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.3s ease; }
         .btn-main:hover { background: #219653; }
         
-        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #fff; margin: 2% auto; padding: 40px; border-radius: 12px; width: 90%; max-width: 850px; position: relative; box-shadow: 0 5px 35px rgba(0,0,0,0.3); }
         .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
         .modal h2 { color: var(--danger); border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .modal h3 { color: var(--secondary); margin-top: 25px; }
-        .disclaimer-box { background: #fff3f3; padding: 15px; border: 1px solid #ffcaca; border-radius: 6px; font-size: 0.9em; margin-top: 20px; }
 
         #resultsArea { display: none; margin-top: 35px; border-top: 2px solid #eee; padding-top: 25px; }
         #textResults { padding: 25px; border-radius: 8px; font-size: 1.1rem; margin-bottom: 30px; }
@@ -65,6 +63,7 @@
     </div>
 
     <form id="retirementForm">
+        <!-- Section 1 -->
         <div class="form-section">
             <h2>1. Timeline</h2>
             <div class="flex-row">
@@ -77,13 +76,39 @@
                     </select>
                 </div>
                 <div class="flex-col"><label>Current Age:</label><input type="number" id="currentAge" value="40"></div>
-                <div class="flex-col"><label>Retirement Age:</label><input type="number" id="retirementAge" value="60"></div>
-                <div class="flex-col"><label>Project Until:</label><input type="number" id="lifeExpectancy" value="90"></div>
+                <div class="flex-col">
+                    <label>Age You Stop Working:</label>
+                    <input type="number" id="retirementAge" value="55">
+                </div>
+                <div class="flex-col"><label>Project Until Age:</label><input type="number" id="lifeExpectancy" value="90"></div>
             </div>
         </div>
 
+        <!-- Section 2 -->
         <div class="form-section">
-            <h2>2. Personal Savings</h2>
+            <h2>2. Economic Assumptions</h2>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>Pre-Retirement Return (%):</label>
+                    <span class="note">Investment growth while working.</span>
+                    <input type="number" id="returnPre" value="6.0" step="0.1">
+                </div>
+                <div class="flex-col">
+                    <label>Post-Retirement Return (%):</label>
+                    <span class="note">Investment growth in retirement.</span>
+                    <input type="number" id="returnPost" value="4.0" step="0.1">
+                </div>
+                <div class="flex-col">
+                    <label>Inflation Rate (%):</label>
+                    <span class="note">Annual cost of living increase.</span>
+                    <input type="number" id="inflationRate" value="2.2" step="0.1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3 -->
+        <div class="form-section">
+            <h2>3. Personal Savings</h2>
             <div class="flex-row">
                 <div class="flex-col"><label>RRSP ($):</label><input type="number" id="rrsp" value="50000"></div>
                 <div class="flex-col"><label>TFSA ($):</label><input type="number" id="tfsa" value="30000"></div>
@@ -92,31 +117,42 @@
             <label>Monthly Contribution ($):</label><input type="number" id="monthlyContribution" value="500">
         </div>
 
+        <!-- Section 4 -->
         <div class="form-section">
-            <h2>3. Pension Selection</h2>
+            <h2>4. Pension Selection</h2>
             <label>Employer Pension Type:</label>
             <select id="pensionType" onchange="togglePensionFields()">
                 <option value="none">No Employer Pension</option>
-                <option value="federal">Federal Public Service (PSSA)</option>
+                <option value="federal" selected>Federal Public Service (PSSA)</option>
                 <option value="provincial">Provincial Public Service (85 Factor)</option>
             </select>
-            <div id="pensionDetails" class="pension-box hidden">
-                <div id="federalGroupSelector" class="hidden">
-                    <label>Start Date Class:</label>
-                    <select id="federalGroup">
-                        <option value="1">Joined Before 2013 (Group 1)</option>
-                        <option value="2">Joined 2013 or Later (Group 2)</option>
-                    </select>
-                </div>
+            
+            <div id="pensionDetails" class="pension-box">
                 <div class="flex-row">
+                    <div class="flex-col">
+                        <label>Age to Start Pension:</label>
+                        <span class="note">Deferring collection can remove early penalties.</span>
+                        <input type="number" id="pensionStartAge" value="60">
+                    </div>
+                    <div class="flex-col" id="federalGroupCol">
+                        <label>Start Date Class:</label>
+                        <select id="federalGroup">
+                            <option value="1">Joined Before 2013 (Group 1)</option>
+                            <option value="2">Joined 2013 or Later (Group 2)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="flex-row" style="margin-top: 15px;">
                     <div class="flex-col"><label>Years of Service at Retirement:</label><input type="number" id="yearsOfService" value="30"></div>
                     <div class="flex-col"><label>Best 5 Avg Salary ($):</label><input type="number" id="best5Salary" value="100000"></div>
                 </div>
             </div>
         </div>
 
+        <!-- Section 5 -->
         <div class="form-section">
-            <h2>4. Income Goal</h2>
+            <h2>5. Income Goal</h2>
             <label>Desired Annual After-Tax Take-Home ($):</label>
             <input type="number" id="desiredIncome" value="60000">
         </div>
@@ -139,28 +175,23 @@
     <div class="modal-content">
         <span class="close-modal" onclick="closeModal()">&times;</span>
         <h2>Assumptions & Methodology</h2>
-        
-        <div class="disclaimer-box">
-            <strong>⚠️ IMPORTANT DISCLAIMER:</strong> This tool is for educational and illustrative purposes only. It does not constitute professional financial, tax, or legal advice. Canadian tax laws and pension regulations are subject to change and vary significantly by individual circumstances. Please consult with a certified financial planner or qualified tax professional before making any financial decisions.
-        </div>
+        <p>This tool calculates the "Gross-Up" required to hit your net target based on specified economic factors and pension rules.</p>
 
-        <h3>1. Economic Assumptions</h3>
+        <h3>Economic Logic</h3>
         <ul>
-            <li><strong>Inflation:</strong> Fixed at 2.2% annually. We index your income goal and government benefits to this rate to maintain purchasing power.</li>
-            <li><strong>Growth Rates:</strong> 6% annual return on savings while working; 4% annual return during retirement (conservative shift).</li>
+            <li><strong>Growth & Inflation:</strong> These rates are specified by the user. Inflation indices your target income goal and government benefits annually.</li>
             <li><strong>CPP & OAS:</strong> Combined estimate of ~$21,000/year (today's dollars) starting at age 65.</li>
         </ul>
 
-        <h3>2. Pension Calculations (Bridge & Penalties)</h3>
+        <h3>Pension Rules</h3>
         <ul>
-            <li><strong>PSSA (Federal):</strong> Uses the 2% formula. If retiring early, a 5% reduction per year is applied for every year you are short of age 60 (Group 1) or age 65 (Group 2), unless the 30-year service rule is met. A bridge benefit is paid until age 65.</li>
-            <li><strong>85-Factor (Provincial):</strong> Pension is unreduced if Age + Years of Service &ge; 85. Otherwise, a 3% reduction per year is applied based on the shorter gap to the 85-factor or age 65.</li>
+            <li><strong>Federal:</strong> 5% penalty per year short of age 60 (G1) or 65 (G2) unless 30 years service met. A bridge benefit is paid until age 65.</li>
+            <li><strong>Provincial:</strong> 3% penalty per year short of 85 points or age 65.</li>
         </ul>
 
-        <h3>3. Tax & Withdrawal Logic</h3>
+        <h3>Taxation</h3>
         <ul>
-            <li><strong>Tax Engine:</strong> A simplified "Gross-Up" model that estimates federal and provincial income taxes to ensure your "Net" goal is met.</li>
-            <li><strong>Priority:</strong> We prioritize spending Pensions first, then Non-Registered savings, then RRSPs, and finally TFSAs to minimize the immediate tax burden.</li>
+            <li><strong>Strategy:</strong> A simplified tax model grossing up withdrawals to ensure the "Net" take-home goal is met across all years.</li>
         </ul>
         
         <button class="btn-main" onclick="closeModal()" style="margin-top:20px; font-size:16px;">I Understand</button>
@@ -173,7 +204,7 @@ function closeModal() { document.getElementById('assumptionsModal').style.displa
 function togglePensionFields() {
     const type = document.getElementById('pensionType').value;
     document.getElementById('pensionDetails').classList.toggle('hidden', type === 'none');
-    document.getElementById('federalGroupSelector').classList.toggle('hidden', type !== 'federal');
+    document.getElementById('federalGroupCol').classList.toggle('hidden', type !== 'federal');
 }
 
 let incomeChartInstance = null;
@@ -183,7 +214,7 @@ function estimateTaxes(income, inf, yrs) {
     let tax = 0;
     let bpa = 15500 * f;
     let taxable = Math.max(0, income - bpa);
-    if(taxable > 0) tax += Math.min(taxable, 50000 * f) * 0.22; // Mid-bracket approx
+    if(taxable > 0) tax += Math.min(taxable, 50000 * f) * 0.22; 
     if(taxable > 50000 * f) tax += (taxable - 50000 * f) * 0.38;
     return tax;
 }
@@ -192,43 +223,50 @@ function runRetirementSimulation() {
     const curAge = parseInt(document.getElementById('currentAge').value);
     const retAge = parseInt(document.getElementById('retirementAge').value);
     const lifeExp = parseInt(document.getElementById('lifeExpectancy').value);
+    let penStartAge = parseInt(document.getElementById('pensionStartAge').value) || retAge;
+    
+    // Growth Rates from user inputs
+    const inf = parseFloat(document.getElementById('inflationRate').value) / 100;
+    const returnPre = parseFloat(document.getElementById('returnPre').value) / 100;
+    const returnPost = parseFloat(document.getElementById('returnPost').value) / 100;
+
     let rrsp = parseFloat(document.getElementById('rrsp').value) || 0;
     let tfsa = parseFloat(document.getElementById('tfsa').value) || 0;
     let nonReg = parseFloat(document.getElementById('nonReg').value) || 0;
     const monthly = parseFloat(document.getElementById('monthlyContribution').value) || 0;
     const goal = parseFloat(document.getElementById('desiredIncome').value);
+    
     const penType = document.getElementById('pensionType').value;
     const yos = parseFloat(document.getElementById('yearsOfService').value) || 0;
     const b5 = parseFloat(document.getElementById('best5Salary').value) || 0;
     const fedG = document.getElementById('federalGroup').value;
 
-    const inf = 0.022;
     const yrsToRet = retAge - curAge;
+
+    if (yrsToRet < 0 || lifeExp <= retAge) return alert("Ages are illogical.");
+    if (penStartAge < retAge) return alert("You cannot start collecting a pension before you stop working.");
 
     // Accumulation logic
     for(let i=0; i<yrsToRet*12; i++){
         rrsp += monthly*0.4; tfsa += monthly*0.4; nonReg += monthly*0.2;
-        rrsp *= (1+0.06/12); tfsa *= (1+0.06/12); nonReg *= (1+0.06/12);
+        rrsp *= (1+returnPre/12); tfsa *= (1+returnPre/12); nonReg *= (1+returnPre/12);
     }
 
     // Penalty Calculation
     let mult = 1.0;
-    let pText = "";
     if(penType === 'federal'){
         let target = (fedG === "1") ? 60 : 65;
         let sMin = (fedG === "1") ? 55 : 60;
-        if(retAge < target && !(retAge >= sMin && yos >= 30)){
-            let penaltyYrs = target - retAge;
-            mult = 1.0 - (penaltyYrs * 0.05);
-            pText = `<br><em>Note: Pension reduced by ${penaltyYrs*5}% due to early retirement criteria.</em>`;
+        let unreducedEarly = (retAge >= sMin && yos >= 30);
+        if(penStartAge < target && !unreducedEarly){
+            mult = 1.0 - ((target - penStartAge) * 0.05);
         }
     } else if(penType === 'provincial'){
-        if((retAge + yos) < 85 && retAge < 65){
-            let penaltyYrs = Math.min(85 - (retAge + yos), 65 - retAge);
-            mult = 1.0 - (penaltyYrs * 0.03);
-            pText = `<br><em>Note: Pension reduced by ${Math.round(penaltyYrs*3)}% based on the 85-factor gap.</em>`;
+        if(penStartAge < 65 && (retAge + yos) < 85){
+            mult = 1.0 - (Math.min(85 - (retAge + yos), 65 - penStartAge) * 0.03);
         }
     }
+    mult = Math.max(0.1, mult);
 
     let targetNet = goal * Math.pow(1+inf, yrsToRet);
     let pBase = (0.02 * yos * b5 * mult) * Math.pow(1+inf, yrsToRet);
@@ -241,7 +279,8 @@ function runRetirementSimulation() {
     while(simAge <= lifeExp){
         labels.push(`Age ${simAge}`);
         targetLine.push(targetNet);
-        let pInc = (penType !== 'none') ? (simAge >= 65 ? Math.max(0, pBase - pDrop) : pBase) : 0;
+        
+        let pInc = (penType !== 'none' && simAge >= penStartAge) ? (simAge >= 65 ? Math.max(0, pBase - pDrop) : pBase) : 0;
         let cInc = (simAge >= 65) ? (21000 * Math.pow(1+inf, simAge - curAge)) : 0;
         
         penData.push(pInc); cppData.push(cInc);
@@ -250,7 +289,6 @@ function runRetirementSimulation() {
         let taxableSum = pInc + cInc;
         let net = taxableSum - estimateTaxes(taxableSum, inf, simAge - curAge);
         
-        // Drawdown to hit target
         while(net < (targetNet - 10)){
             let chunk = 250;
             if(nonReg >= chunk){ nonReg -= chunk; dNR += chunk; taxableSum += chunk*0.25; }
@@ -260,11 +298,11 @@ function runRetirementSimulation() {
             net = (pInc + cInc + dNR + dR + dT) - estimateTaxes(taxableSum, inf, simAge - curAge);
         }
 
-        // Logic Fix: Check if target net was actually hit
+        // CORRECTED Logic: Only flag shortfall if total net cannot meet target
         if(net < (targetNet - 500) && ranOutAge === null) ranOutAge = simAge;
 
         nrD.push(dNR); rD.push(dR); tD.push(dT);
-        rrsp *= 1.04; tfsa *= 1.04; nonReg *= 1.04;
+        rrsp *= (1+returnPost); tfsa *= (1+returnPost); nonReg *= (1+returnPost);
         targetNet *= (1+inf); pBase *= (1+inf); pDrop *= (1+inf);
         simAge++;
     }
@@ -275,17 +313,17 @@ function runRetirementSimulation() {
     
     if(ranOutAge === null){
         tr.classList.add('success');
-        tr.innerHTML = `<div class="highlight">🎉 Financial Plan: Secure</div><p>Your combined income from Pensions, Benefits, and Savings is projected to meet your goal throughout retirement. ${pText}</p>`;
+        tr.innerHTML = `<div class="highlight">🎉 Financial Plan: Secure</div><p>Your income sources are projected to meet your goal throughout retirement.</p>`;
     } else {
         tr.classList.add('warning');
-        tr.innerHTML = `<div class="highlight">⚠️ Income Gap Predicted</div><p>Total income is projected to fall below your target starting at age <span class="highlight">${ranOutAge}</span>. ${pText}</p>`;
+        tr.innerHTML = `<div class="highlight">⚠️ Income Gap Predicted</div><p>Total income is projected to fall below your target at age ${ranOutAge}.</p>`;
     }
 
     if(incomeChartInstance) incomeChartInstance.destroy();
     incomeChartInstance = new Chart(document.getElementById('incomeChart').getContext('2d'), {
         type: 'bar',
         data: { labels: labels, datasets: [
-            { type: 'line', label: 'Desired Net Goal', data: targetLine, borderColor: '#2ecc71', borderWidth: 3, pointRadius:0 },
+            { type: 'line', label: 'Goal Net', data: targetLine, borderColor: '#2ecc71', borderWidth: 3, pointRadius:0 },
             { label: 'CPP + OAS', data: cppData, backgroundColor: '#f1c40f', stack: 'a' },
             { label: 'Employer Pension', data: penData, backgroundColor: '#e67e22', stack: 'a' },
             { label: 'Withdraw Non-Reg', data: nrD, backgroundColor: '#3498db', stack: 'a' },
@@ -295,6 +333,7 @@ function runRetirementSimulation() {
         options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { position: 'bottom' } } }
     });
 }
+togglePensionFields();
 </script>
 </body>
 </html>

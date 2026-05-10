@@ -41,6 +41,7 @@
         .modal h2 { color: var(--danger); border-bottom: 2px solid #eee; padding-bottom: 10px; }
         .modal h3 { color: var(--secondary); margin-top: 25px; }
         .modal ul li { margin-bottom: 8px; }
+        .disclaimer-box { background: #fff3f3; padding: 15px; border-left: 5px solid var(--danger); border-radius: 6px; font-size: 0.9em; margin-top: 25px; margin-bottom: 15px; line-height: 1.5;}
 
         #resultsArea { display: none; margin-top: 35px; border-top: 2px solid #eee; padding-top: 25px; }
         #textResults { padding: 25px; border-radius: 8px; font-size: 1.05rem; margin-bottom: 30px; }
@@ -75,11 +76,21 @@
             <h2>1. Timeline</h2>
             <div class="flex-row">
                 <div class="flex-col">
-                    <label>Province:</label>
+                    <label>Province/Territory:</label>
                     <select id="province">
                         <option value="AB">Alberta</option>
-                        <option value="ON" selected>Ontario</option>
                         <option value="BC">British Columbia</option>
+                        <option value="MB">Manitoba</option>
+                        <option value="NB">New Brunswick</option>
+                        <option value="NL">Newfoundland and Labrador</option>
+                        <option value="NS">Nova Scotia</option>
+                        <option value="NT">Northwest Territories</option>
+                        <option value="NU">Nunavut</option>
+                        <option value="ON" selected>Ontario</option>
+                        <option value="PE">Prince Edward Island</option>
+                        <option value="QC">Quebec</option>
+                        <option value="SK">Saskatchewan</option>
+                        <option value="YT">Yukon</option>
                     </select>
                 </div>
                 <div class="flex-col"><label>Current Age:</label><input type="number" id="currentAge" value="40"></div>
@@ -198,7 +209,7 @@
         <div class="form-section">
             <h2>7. Income Goal</h2>
             <label>Desired Annual After-Tax Take-Home ($):</label>
-            <span class="note">The engine automatically gross-up withdrawals to cover your tax bill.</span>
+            <span class="note">The engine automatically gross-up withdrawals to cover your tax bill and OAS clawbacks.</span>
             <input type="number" id="desiredIncome" value="60000">
         </div>
 
@@ -225,22 +236,22 @@
 
         <h3>One-Time Events (Windfalls & Expenses)</h3>
         <ul>
-            <li><strong>Multiple Events:</strong> You can model up to 10 specific life events. Use negative numbers for planned large purchases (like buying a car every 5 years or replacing a roof). The model pulls these expenses out of your Non-Registered savings first.</li>
-            <li><strong>Principal Residence Exemption:</strong> In Canada, the sale of your primary home is generally exempt from capital gains taxes. We deposit positive windfalls (like downsizing) directly into your Non-Registered account without triggering a tax event.</li>
-            <li><strong>Inheritances:</strong> Because Canadian inheritances are typically received tax-free (taxes are paid by the estate), these are also modeled as tax-free cash injections.</li>
+            <li><strong>Multiple Events:</strong> Model up to 10 specific life events. Use negative numbers for planned large purchases. The model pulls expenses out of your Non-Registered savings first.</li>
+            <li><strong>Principal Residence Exemption:</strong> In Canada, the sale of your primary home is generally exempt from capital gains taxes. We deposit positive windfalls directly into your Non-Registered account without triggering a tax event.</li>
+            <li><strong>Inheritances:</strong> Canadian inheritances are modeled as tax-free cash injections, as taxes are handled by the estate prior to distribution.</li>
         </ul>
         
-        <h3>Government Benefits (CPP & OAS) Timing</h3>
+        <h3>Government Benefits (CPP & OAS)</h3>
         <ul>
-            <li><strong>Strategy:</strong> Delaying these benefits can significantly increase your retirement income and minimize lifetime taxes.</li>
             <li><strong>CPP (Canada Pension Plan):</strong> Can be started between age 60 and 70. Starting early permanently reduces your pension by 7.2% per year before 65. Delaying increases it by 8.4% per year after 65. We assume an average base payout of ~$11,500/year (today's dollars) at age 65.</li>
             <li><strong>OAS (Old Age Security):</strong> Can be started between age 65 and 70. Delaying increases the payout by 7.2% per year after 65. We assume a full base payout of ~$9,100/year (today's dollars) at age 65.</li>
+            <li><strong>OAS Clawback (Recovery Tax):</strong> If your taxable income exceeds the OAS threshold (~$95,000 in today's dollars), the government claws back 15% of the excess, up to the full amount of your OAS. <em>Our engine accurately models this. It dynamically indexes the $95k threshold to inflation and automatically calculates the 15% penalty if your taxable withdrawals cross the line, grossing up your savings withdrawals to cover the difference.</em></li>
         </ul>
 
         <h3>Employer Pension Rules</h3>
         <ul>
             <li><strong>Federal (PSSA):</strong> Applies a 5% penalty per year if you collect before age 60 (Group 1) or 65 (Group 2), unless you have 30 years of service. An estimated bridge benefit is paid until age 65.</li>
-            <li><strong>Provincial (85 Factor):</strong> Applies a 3% penalty for every year you are short of reaching 85 points (Age + Years of Service) or age 65, whichever penalty is smaller.</li>
+            <li><strong>Provincial (85 Factor):</strong> Applies a 3% penalty for every year you are short of reaching 85 points (Age + Years of Service) or age 65.</li>
         </ul>
 
         <h3>Taxation & Withdrawal Strategy</h3>
@@ -255,8 +266,12 @@
             </li>
             <li><strong>Tax Brackets:</strong> The model uses an estimated blended Fed/Prov tax profile, applying a tax-free Basic Personal Amount (~$15,500). <em>These brackets are indexed to your inflation rate yearly to prevent artificial "bracket creep."</em></li>
         </ul>
+
+        <div class="disclaimer-box">
+            <strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice. The calculations rely on simplified assumptions regarding future inflation, market returns, and blended Canadian tax brackets, which may not accurately reflect your specific circumstances or future changes in legislation. Always consult with a certified financial planner, accountant, or qualified professional before making significant financial or retirement decisions.
+        </div>
         
-        <button class="btn-main" onclick="closeModal()" style="margin-top:20px; font-size:16px;">I Understand</button>
+        <button class="btn-main" onclick="closeModal()" style="font-size:16px;">I Understand</button>
     </div>
 </div>
 
@@ -433,6 +448,7 @@ function runRetirementSimulation() {
 
     const baseCPP = 11500;
     const baseOAS = 9100;
+    const oasThresholdBase = 95000;
     const adjustedCPP = baseCPP * cppMultiplier;
     const adjustedOAS = baseOAS * oasMultiplier;
 
@@ -442,6 +458,8 @@ function runRetirementSimulation() {
 
     let simAge = retAge;
     let ranOutAge = null;
+    let experiencedClawback = false;
+    
     const labels=[], cppOasData=[], penData=[], nrD=[], rD=[], tD=[], targetLine=[];
 
     while(simAge <= lifeExp){
@@ -458,26 +476,46 @@ function runRetirementSimulation() {
         let pInc = (penType !== 'none' && simAge >= penStartAge) ? (simAge >= 65 ? Math.max(0, pBase - pDrop) : pBase) : 0;
         
         let cInc = 0;
+        let currentOasReceived = 0;
         if (simAge >= cppStartAge) {
             cInc += adjustedCPP * Math.pow(1+inf, simAge - curAge);
         }
         if (simAge >= oasStartAge) {
-            cInc += adjustedOAS * Math.pow(1+inf, simAge - curAge);
+            currentOasReceived = adjustedOAS * Math.pow(1+inf, simAge - curAge);
+            cInc += currentOasReceived;
         }
         
         penData.push(pInc); cppOasData.push(cInc);
 
         let dNR=0, dR=0, dT=0;
         let taxableSum = pInc + cInc;
-        let net = taxableSum - estimateTaxes(taxableSum, inf, simAge - curAge);
         
+        // Initial Net calculation before drawdown loop
+        let currentOasThreshold = oasThresholdBase * Math.pow(1+inf, simAge - curAge);
+        let clawback = 0;
+        if (taxableSum > currentOasThreshold && currentOasReceived > 0) {
+            clawback = Math.min((taxableSum - currentOasThreshold) * 0.15, currentOasReceived);
+            if (clawback > 0) experiencedClawback = true;
+        }
+        let net = taxableSum - estimateTaxes(taxableSum, inf, simAge - curAge) - clawback;
+        
+        // Drawdown Loop (Gross-Up logic)
         while(net < (targetNet - 10)){
             let chunk = 250;
             if(nonReg >= chunk){ nonReg -= chunk; dNR += chunk; taxableSum += chunk*0.25; }
             else if(rrsp >= chunk){ rrsp -= chunk; dR += chunk; taxableSum += chunk; }
             else if(tfsa >= chunk){ tfsa -= chunk; dT += chunk; }
             else break;
-            net = (pInc + cInc + dNR + dR + dT) - estimateTaxes(taxableSum, inf, simAge - curAge);
+            
+            // Recalculate taxes and potential clawback with the newly added income
+            if (taxableSum > currentOasThreshold && currentOasReceived > 0) {
+                clawback = Math.min((taxableSum - currentOasThreshold) * 0.15, currentOasReceived);
+                if (clawback > 0) experiencedClawback = true;
+            } else {
+                clawback = 0;
+            }
+            
+            net = (pInc + cInc + dNR + dR + dT) - estimateTaxes(taxableSum, inf, simAge - curAge) - clawback;
         }
 
         if(net < (targetNet - 500) && ranOutAge === null) ranOutAge = simAge;
@@ -504,12 +542,17 @@ function runRetirementSimulation() {
         }
     });
 
+    let clawbackWarning = experiencedClawback 
+        ? `<li style="color: var(--danger);"><strong>OAS Clawback Triggered:</strong> Your taxable income exceeded the maximum threshold during retirement. The engine automatically paid the 15% recovery tax by grossing up your withdrawals.</li>` 
+        : "";
+
     const summaryHtml = `
         <ul class="summary-list">
             <li><strong>Total Personal Savings at Retirement:</strong> ${formattedSavings}</li>
             <li>${pText}</li>
             <li><strong>Government Benefits Timing:</strong> ${cppText} ${oasText}</li>
             ${eventTextList}
+            ${clawbackWarning}
         </ul>
     `;
     
@@ -526,7 +569,7 @@ function runRetirementSimulation() {
             <span class="highlight">⚠️ Income Gap Predicted</span>
             <p>Your total income is projected to fall below your target starting at age <strong>${ranOutAge}</strong>.</p>
             ${summaryHtml}
-            <p style="font-size:0.9em; margin-top:10px;"><em>Tip: Try deferring your pension start age, increasing your monthly contributions, or lowering your desired target income to bridge this gap.</em></p>
+            <p style="font-size:0.9em; margin-top:10px;"><em>Tip: Try deferring your pension start age, adjusting your savings contributions, or lowering your desired target income to bridge this gap.</em></p>
         `;
     }
 

@@ -19,6 +19,7 @@
         
         .header-actions { text-align: center; margin-bottom: 25px; border-bottom: 4px solid var(--danger); padding-bottom: 15px; }
         .btn-link { background: none; border: none; color: var(--secondary); text-decoration: underline; cursor: pointer; font-size: 0.95rem; }
+        .btn-link:hover { color: var(--primary); }
         
         h2 { color: #2980b9; font-size: 1.3rem; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         .form-section { background: #f9fbfd; border-left: 5px solid var(--secondary); padding: 20px; margin-bottom: 25px; border-radius: 4px; }
@@ -38,10 +39,13 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.7); }
         .modal-content { background-color: #fff; margin: 2% auto; padding: 40px; border-radius: 12px; width: 90%; max-width: 850px; position: relative; box-shadow: 0 5px 35px rgba(0,0,0,0.3); }
         .close-modal { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .modal h2 { color: var(--danger); border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .modal h3 { color: var(--secondary); margin-top: 25px; }
+        .modal h2 { color: var(--danger); border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top:0; }
+        .modal h3 { color: var(--secondary); margin-top: 25px; font-size: 1.15rem; }
         .modal ul li { margin-bottom: 8px; }
         .disclaimer-box { background: #fff3f3; padding: 15px; border-left: 5px solid var(--danger); border-radius: 6px; font-size: 0.9em; margin-top: 25px; margin-bottom: 15px; line-height: 1.5;}
+
+        .budget-total-box { margin-top: 25px; padding: 20px; background: #e8f8f5; border-left: 5px solid var(--success); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .budget-total-box h3 { margin: 0; color: #1e8449; font-size: 1.4rem; }
 
         #resultsArea { display: none; margin-top: 35px; border-top: 2px solid #eee; padding-top: 25px; }
         #textResults { padding: 25px; border-radius: 8px; font-size: 1.05rem; margin-bottom: 30px; }
@@ -68,7 +72,7 @@
     </div>
     
     <div class="header-actions">
-        <button class="btn-link" onclick="openModal()">View Assumptions & Methodology</button>
+        <button class="btn-link" onclick="openModal('assumptionsModal')">View Assumptions & Methodology</button>
     </div>
 
     <form id="retirementForm">
@@ -208,8 +212,11 @@
 
         <div class="form-section">
             <h2>7. Income Goal</h2>
-            <label>Desired Annual After-Tax Take-Home ($):</label>
-            <span class="note">The engine automatically gross-up withdrawals to cover your tax bill and OAS clawbacks.</span>
+            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                <label style="margin-bottom: 0;">Desired Annual After-Tax Take-Home ($):</label>
+                <button type="button" class="btn-link" onclick="openModal('budgetModal')" style="padding: 0;">Need help estimating?</button>
+            </div>
+            <span class="note" style="margin-top: 5px;">The engine automatically gross-up withdrawals to cover your tax bill and OAS clawbacks.</span>
             <input type="number" id="desiredIncome" value="60000">
         </div>
 
@@ -230,7 +237,7 @@
 
 <div id="assumptionsModal" class="modal">
     <div class="modal-content">
-        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <span class="close-modal" onclick="closeModal('assumptionsModal')">&times;</span>
         <h2>Assumptions & Methodology</h2>
         <p>This tool models your retirement by running a year-by-year simulation based on standard Canadian rules and your economic inputs.</p>
 
@@ -271,19 +278,78 @@
             <strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice. The calculations rely on simplified assumptions regarding future inflation, market returns, and blended Canadian tax brackets, which may not accurately reflect your specific circumstances or future changes in legislation. Always consult with a certified financial planner, accountant, or qualified professional before making significant financial or retirement decisions.
         </div>
         
-        <button class="btn-main" onclick="closeModal()" style="font-size:16px;">I Understand</button>
+        <button class="btn-main" onclick="closeModal('assumptionsModal')" style="margin-top:20px; font-size:16px;">I Understand</button>
+    </div>
+</div>
+
+<div id="budgetModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+        <span class="close-modal" onclick="closeModal('budgetModal')">&times;</span>
+        <h2>Retirement Budget Estimator</h2>
+        <p>Estimate your anticipated expenses <strong>during retirement</strong> (in today's dollars). The calculator will tally your yearly need.</p>
+
+        <div class="flex-row">
+            <div class="flex-col">
+                <h3>Housing & Utilities (Monthly)</h3>
+                <label>Mortgage / Rent:</label> <input type="number" class="b-monthly" value="0">
+                <label>Property Tax & Insurance:</label> <input type="number" class="b-monthly" value="0">
+                <label>Utilities & Maintenance:</label> <input type="number" class="b-monthly" value="0">
+            </div>
+            <div class="flex-col">
+                <h3>Daily Living (Monthly)</h3>
+                <label>Groceries & Household:</label> <input type="number" class="b-monthly" value="0">
+                <label>Transportation (Gas, Transit):</label> <input type="number" class="b-monthly" value="0">
+                <label>Healthcare & Insurance:</label> <input type="number" class="b-monthly" value="0">
+            </div>
+        </div>
+        
+        <div class="flex-row" style="margin-top: 10px;">
+            <div class="flex-col">
+                <h3>Lifestyle (Monthly)</h3>
+                <label>Dining & Entertainment:</label> <input type="number" class="b-monthly" value="0">
+                <label>Hobbies & Memberships:</label> <input type="number" class="b-monthly" value="0">
+            </div>
+            <div class="flex-col">
+                <h3>Travel & Legacy (Annual)</h3>
+                <label>Travel & Vacations:</label> <input type="number" class="b-annual" value="0">
+                <label>Family Support & Charity:</label> <input type="number" class="b-annual" value="0">
+            </div>
+        </div>
+
+        <div class="budget-total-box">
+            <div>
+                <span class="note" style="margin-bottom:0; color:#27ae60;">Your Total Annual Target:</span>
+                <h3 id="budgetTotalDisplay">$0</h3>
+            </div>
+            <button class="btn-main" onclick="applyBudget()" style="width: auto; padding: 12px 25px; margin-top: 0;">Save & Apply</button>
+        </div>
     </div>
 </div>
 
 <script>
-function openModal() { document.getElementById('assumptionsModal').style.display = 'block'; }
-function closeModal() { document.getElementById('assumptionsModal').style.display = 'none'; }
+// Modal Controllers
+function openModal(modalId) { 
+    document.getElementById(modalId).style.display = 'block'; 
+    if(modalId === 'budgetModal') calculateBudgetTotal();
+}
+function closeModal(modalId) { 
+    document.getElementById(modalId).style.display = 'none'; 
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    if (event.target == document.getElementById('assumptionsModal')) closeModal('assumptionsModal');
+    if (event.target == document.getElementById('budgetModal')) closeModal('budgetModal');
+}
+
+// Pension Toggle
 function togglePensionFields() {
     const type = document.getElementById('pensionType').value;
     document.getElementById('pensionDetails').classList.toggle('hidden', type === 'none');
     document.getElementById('federalGroupCol').classList.toggle('hidden', type !== 'federal');
 }
 
+// Dynamic Events
 function generateEventFields() {
     const numEvents = parseInt(document.getElementById('numEvents').value);
     const container = document.getElementById('dynamicEventsContainer');
@@ -313,6 +379,32 @@ function generateEventFields() {
     }
 }
 
+// Budget Estimator Logic
+function calculateBudgetTotal() {
+    let total = 0;
+    document.querySelectorAll('.b-monthly').forEach(input => {
+        total += (parseFloat(input.value) || 0) * 12;
+    });
+    document.querySelectorAll('.b-annual').forEach(input => {
+        total += (parseFloat(input.value) || 0);
+    });
+    document.getElementById('budgetTotalDisplay').innerText = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(total);
+    return total;
+}
+
+function applyBudget() {
+    const total = calculateBudgetTotal();
+    document.getElementById('desiredIncome').value = total;
+    closeModal('budgetModal');
+}
+
+// Attach event listeners for real-time budget calculation
+document.querySelectorAll('.b-monthly, .b-annual').forEach(input => {
+    input.addEventListener('input', calculateBudgetTotal);
+});
+
+
+// Core Simulation Engine
 let incomeChartInstance = null;
 
 function estimateTaxes(income, inf, yrs) {

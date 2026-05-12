@@ -108,7 +108,7 @@
                 <div class="flex-col"><label>Current Age:</label><input type="number" id="currentAge" value="40"></div>
                 <div class="flex-col">
                     <label>Age You Stop Working:</label>
-                    <input type="number" id="retirementAge" value="55">
+                    <input type="number" id="retirementAge" value="65">
                 </div>
                 <div class="flex-col"><label>Project Until Age:</label><input type="number" id="lifeExpectancy" value="90"></div>
             </div>
@@ -131,7 +131,7 @@
                 <div class="flex-col">
                     <label>Inflation Rate (%):</label>
                     <span class="note">Annual cost of living increase.</span>
-                    <input type="number" id="inflationRate" value="2.2" step="0.1">
+                    <input type="number" id="inflationRate" value="2.5" step="0.1">
                 </div>
             </div>
         </div>
@@ -140,13 +140,13 @@
         <div class="form-section">
             <h2>3. Personal Savings & Contributions</h2>
             <div class="flex-row">
-                <div class="flex-col"><label>Current RRSP Balance ($):</label><input type="number" id="rrsp" value="0"></div>
-                <div class="flex-col"><label>Current TFSA Balance ($):</label><input type="number" id="tfsa" value="0"></div>
-                <div class="flex-col"><label>Current Non-Reg Balance ($):</label><input type="number" id="nonReg" value="0"></div>
+                <div class="flex-col"><label>Current RRSP Balance ($):</label><input type="number" id="rrsp" value="85000"></div>
+                <div class="flex-col"><label>Current TFSA Balance ($):</label><input type="number" id="tfsa" value="35000"></div>
+                <div class="flex-col"><label>Current Non-Reg Balance ($):</label><input type="number" id="nonReg" value="10000"></div>
             </div>
             <div class="flex-row">
-                <div class="flex-col"><label>Monthly RRSP Contribution ($):</label><input type="number" id="rrspContrib" value="0"></div>
-                <div class="flex-col"><label>Monthly TFSA Contribution ($):</label><input type="number" id="tfsaContrib" value="0"></div>
+                <div class="flex-col"><label>Monthly RRSP Contribution ($):</label><input type="number" id="rrspContrib" value="500"></div>
+                <div class="flex-col"><label>Monthly TFSA Contribution ($):</label><input type="number" id="tfsaContrib" value="300"></div>
                 <div class="flex-col"><label>Monthly Non-Reg Contribution ($):</label><input type="number" id="nonRegContrib" value="0"></div>
             </div>
         </div>
@@ -195,19 +195,19 @@
             <h2>6. Employer Pension Selection</h2>
             <label>Employer Pension Type:</label>
             <select id="pensionType" onchange="togglePensionFields()">
-                <option value="none">No Employer Pension</option>
-                <option value="federal" selected>Federal Public Service (PSSA)</option>
+                <option value="none" selected>No Employer Pension</option>
+                <option value="federal">Federal Public Service (PSSA)</option>
                 <option value="provincial">Provincial Public Service (85 Factor)</option>
             </select>
             
-            <div id="pensionDetails" class="pension-box">
+            <div id="pensionDetails" class="pension-box hidden">
                 <div class="flex-row">
                     <div class="flex-col">
                         <label>Age to Start Employer Pension:</label>
                         <span class="note">Deferring collection can remove early penalties.</span>
-                        <input type="number" id="pensionStartAge" value="60">
+                        <input type="number" id="pensionStartAge" value="65">
                     </div>
-                    <div class="flex-col" id="federalGroupCol">
+                    <div class="flex-col hidden" id="federalGroupCol">
                         <label>Start Date Class:</label>
                         <select id="federalGroup">
                             <option value="1">Joined Before 2013 (Group 1)</option>
@@ -217,8 +217,8 @@
                 </div>
                 
                 <div class="flex-row" style="margin-top: 15px;">
-                    <div class="flex-col"><label>Years of Service at Retirement:</label><input type="number" id="yearsOfService" value="30"></div>
-                    <div class="flex-col"><label>Best 5 Avg Salary ($):</label><input type="number" id="best5Salary" value="100000"></div>
+                    <div class="flex-col"><label>Years of Service at Retirement:</label><input type="number" id="yearsOfService" value="25"></div>
+                    <div class="flex-col"><label>Best 5 Avg Salary ($):</label><input type="number" id="best5Salary" value="80000"></div>
                 </div>
             </div>
         </div>
@@ -238,7 +238,7 @@
                 <div class="flex-col">
                     <label>Target Estate (% of Retirement Savings):</label>
                     <span class="note">Percentage of starting retirement assets to leave at end age (e.g., 10).</span>
-                    <input type="number" id="legacyPercent" value="0" min="0" max="100">
+                    <input type="number" id="legacyPercent" value="10" min="0" max="100">
                 </div>
             </div>
         </div>

@@ -211,13 +211,22 @@
         </div>
 
         <div class="form-section">
-            <h2>7. Income Goal</h2>
-            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                <label style="margin-bottom: 0;">Desired Annual After-Tax Take-Home ($):</label>
-                <button type="button" class="btn-link" onclick="openModal('budgetModal')" style="padding: 0;">Need help estimating?</button>
+            <h2>7. Goals (Income & Estate)</h2>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                        <label style="margin-bottom: 0;">Desired Annual After-Tax Take-Home ($):</label>
+                        <button type="button" class="btn-link" onclick="openModal('budgetModal')" style="padding: 0;">Need help estimating?</button>
+                    </div>
+                    <span class="note" style="margin-top: 5px;">The engine automatically gross-up withdrawals to cover taxes and clawbacks.</span>
+                    <input type="number" id="desiredIncome" value="60000">
+                </div>
+                <div class="flex-col">
+                    <label>Target Estate (% of Retirement Savings):</label>
+                    <span class="note">Percentage of starting retirement assets to leave at end age (e.g., 10).</span>
+                    <input type="number" id="legacyPercent" value="0" min="0" max="100">
+                </div>
             </div>
-            <span class="note" style="margin-top: 5px;">The engine automatically gross-up withdrawals to cover your tax bill and OAS clawbacks.</span>
-            <input type="number" id="desiredIncome" value="60000">
         </div>
 
         <button type="button" class="btn-main" onclick="runRetirementSimulation()">Calculate My Retirement</button>
@@ -244,6 +253,9 @@
 
         <h3>Privacy & Data Security</h3>
         <p>This calculator is completely client-side. <strong>No personal or financial data is collected, stored, or transmitted to any server.</strong> All calculations happen securely and locally on your own device.</p>
+
+        <h3>Estate / Legacy Target</h3>
+        <p>You can optionally specify a percentage of your initial retirement savings that you wish to have remaining at the end of your projection. The calculator evaluates if your income needs will deplete your portfolio past this threshold, adjusting your plan's "success" status accordingly.</p>
 
         <h3>One-Time Events (Windfalls & Expenses)</h3>
         <ul>
@@ -456,6 +468,7 @@ function runRetirementSimulation() {
     const nonRegContrib = parseFloat(document.getElementById('nonRegContrib').value) || 0;
 
     const goal = parseFloat(document.getElementById('desiredIncome').value);
+    const legacyPercent = parseFloat(document.getElementById('legacyPercent').value) || 0;
     
     const penType = document.getElementById('pensionType').value;
     const yos = parseFloat(document.getElementById('yearsOfService').value) || 0;
@@ -621,6 +634,13 @@ function runRetirementSimulation() {
         targetNet *= (1+inf); pBase *= (1+inf); pDrop *= (1+inf);
         simAge++;
     }
+    
+    // Calculate final estate
+    let finalAssets = Math.max(0, rrsp + tfsa + nonReg);
+    let legacyTargetNominal = totalSavedAtRetirement * (legacyPercent / 100) * Math.pow(1+inf, lifeExp - retAge);
+    
+    let formattedFinalEstate = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(finalAssets);
+    let formattedLegacyTarget = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(legacyTargetNominal);
 
     document.getElementById('resultsArea').style.display = 'block';
     const tr = document.getElementById('textResults');
@@ -641,6 +661,8 @@ function runRetirementSimulation() {
     let clawbackWarning = experiencedClawback 
         ? `<li style="color: var(--danger);"><strong>OAS Clawback Triggered:</strong> Your taxable income exceeded the maximum threshold during retirement. The engine automatically paid the 15% recovery tax by grossing up your withdrawals.</li>` 
         : "";
+        
+    let estateHtml = `<li><strong>Projected Remaining Assets at Age ${lifeExp}:</strong> ${formattedFinalEstate} ${legacyPercent > 0 ? `<em>(Target: ${legacyPercent}% or ${formattedLegacyTarget})</em>` : ''}</li>`;
 
     const summaryHtml = `
         <ul class="summary-list">
@@ -649,16 +671,27 @@ function runRetirementSimulation() {
             <li><strong>Government Benefits Timing:</strong> ${cppText} ${oasText}</li>
             ${eventTextList}
             ${clawbackWarning}
+            ${estateHtml}
         </ul>
     `;
     
     if(ranOutAge === null){
-        tr.classList.add('success');
-        tr.innerHTML = `
-            <span class="highlight">🎉 Financial Plan: Secure</span>
-            <p>Your combined income sources are projected to successfully meet your after-tax goal throughout retirement.</p>
-            ${summaryHtml}
-        `;
+        if (legacyPercent > 0 && finalAssets < legacyTargetNominal) {
+            tr.classList.add('warning');
+            tr.innerHTML = `
+                <span class="highlight">⚠️ Income Secure, but Estate Goal Missed</span>
+                <p>Your income sources are projected to last, but your remaining assets at age ${lifeExp} fall short of your ${legacyPercent}% estate target.</p>
+                ${summaryHtml}
+                <p style="font-size:0.9em; margin-top:10px;"><em>Tip: Try lowering your desired target income or increasing contributions to preserve more of your portfolio for your estate.</em></p>
+            `;
+        } else {
+            tr.classList.add('success');
+            tr.innerHTML = `
+                <span class="highlight">🎉 Financial Plan: Secure</span>
+                <p>Your combined income sources are projected to successfully meet your after-tax goal throughout retirement.</p>
+                ${summaryHtml}
+            `;
+        }
     } else {
         tr.classList.add('warning');
         tr.innerHTML = `

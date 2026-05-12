@@ -56,6 +56,13 @@
         .summary-list { margin-top: 15px; background: rgba(255,255,255,0.6); padding: 15px 15px 15px 35px; border-radius: 6px; }
         .summary-list li { margin-bottom: 8px; }
 
+        /* Chart Toggles */
+        .chart-toggles { text-align: center; margin-bottom: 20px; display: none; }
+        .btn-toggle { background: #ecf0f1; border: 1px solid #bdc3c7; padding: 10px 20px; cursor: pointer; font-size: 1rem; color: #7f8c8d; transition: all 0.2s; margin: 0; outline: none; font-weight: 600;}
+        .btn-toggle:first-child { border-radius: 6px 0 0 6px; }
+        .btn-toggle:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+        .btn-toggle.active { background: var(--secondary); color: white; border-color: var(--secondary); }
+
         #chartContainer { position: relative; height: 55vh; width: 100%; }
         
         footer { text-align: center; font-size: 0.85em; color: #7f8c8d; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 20px; line-height: 1.5; }
@@ -76,6 +83,7 @@
     </div>
 
     <form id="retirementForm">
+        <!-- Section 1 -->
         <div class="form-section">
             <h2>1. Timeline</h2>
             <div class="flex-row">
@@ -106,6 +114,7 @@
             </div>
         </div>
 
+        <!-- Section 2 -->
         <div class="form-section">
             <h2>2. Economic Assumptions</h2>
             <div class="flex-row">
@@ -127,6 +136,7 @@
             </div>
         </div>
 
+        <!-- Section 3 -->
         <div class="form-section">
             <h2>3. Personal Savings & Contributions</h2>
             <div class="flex-row">
@@ -141,6 +151,7 @@
             </div>
         </div>
 
+        <!-- Section 4 -->
         <div class="form-section">
             <h2>4. One-Time Events (Windfalls or Expenses)</h2>
             <label>How many specific events do you want to model?</label>
@@ -162,6 +173,7 @@
             <div id="dynamicEventsContainer"></div>
         </div>
         
+        <!-- Section 5 -->
         <div class="form-section">
             <h2>5. Government Benefits (CPP & OAS)</h2>
             <div class="flex-row">
@@ -178,6 +190,7 @@
             </div>
         </div>
 
+        <!-- Section 6 -->
         <div class="form-section">
             <h2>6. Employer Pension Selection</h2>
             <label>Employer Pension Type:</label>
@@ -210,6 +223,7 @@
             </div>
         </div>
 
+        <!-- Section 7 -->
         <div class="form-section">
             <h2>7. Goals (Income & Estate)</h2>
             <div class="flex-row">
@@ -234,7 +248,11 @@
 
     <div id="resultsArea">
         <div id="textResults"></div>
-        <div id="chartContainer"><canvas id="incomeChart"></canvas></div>
+        <div id="chartToggle" class="chart-toggles">
+            <button id="btnIncomeChart" class="btn-toggle active" onclick="switchChart('income')">Income View</button>
+            <button id="btnPortfolioChart" class="btn-toggle" onclick="switchChart('portfolio')">Portfolio Balance</button>
+        </div>
+        <div id="chartContainer"><canvas id="mainChart"></canvas></div>
     </div>
 
     <footer>
@@ -245,6 +263,7 @@
     </footer>
 </div>
 
+<!-- Assumptions Modal -->
 <div id="assumptionsModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeModal('assumptionsModal')">&times;</span>
@@ -298,6 +317,7 @@
     </div>
 </div>
 
+<!-- Budget Estimator Modal -->
 <div id="budgetModal" class="modal">
     <div class="modal-content" style="max-width: 700px;">
         <span class="close-modal" onclick="closeModal('budgetModal')">&times;</span>
@@ -414,14 +434,15 @@ function applyBudget() {
     closeModal('budgetModal');
 }
 
-// Attach event listeners for real-time budget calculation
 document.querySelectorAll('.b-monthly, .b-annual').forEach(input => {
     input.addEventListener('input', calculateBudgetTotal);
 });
 
 
 // Core Simulation Engine
-let incomeChartInstance = null;
+let chartInstance = null;
+let currentChartMode = 'income';
+let simData = {}; // Global object to hold chart datasets
 
 function estimateTaxes(income, inf, yrs) {
     const f = Math.pow(1 + inf, yrs);
@@ -431,6 +452,75 @@ function estimateTaxes(income, inf, yrs) {
     if(taxable > 0) tax += Math.min(taxable, 50000 * f) * 0.22; 
     if(taxable > 50000 * f) tax += (taxable - 50000 * f) * 0.38;
     return tax;
+}
+
+function switchChart(mode) {
+    currentChartMode = mode;
+    document.getElementById('btnIncomeChart').classList.toggle('active', mode === 'income');
+    document.getElementById('btnPortfolioChart').classList.toggle('active', mode === 'portfolio');
+    renderChart();
+}
+
+// Shared tooltip callback to format numbers as currency
+const currencyTooltipCallback = {
+    label: function(context) {
+        let label = context.dataset.label || '';
+        if (label) {
+            label += ': ';
+        }
+        if (context.parsed.y !== null) {
+            label += new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(context.parsed.y);
+        }
+        return label;
+    }
+};
+
+function renderChart() {
+    if(chartInstance) chartInstance.destroy();
+    const ctx = document.getElementById('mainChart').getContext('2d');
+    
+    if (currentChartMode === 'income') {
+        chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: simData.labels, datasets: [
+                { type: 'line', label: 'Goal Net', data: simData.targetLine, borderColor: '#2ecc71', borderWidth: 3, pointRadius:0 },
+                { label: 'CPP + OAS', data: simData.cppOasData, backgroundColor: '#f1c40f', stack: 'a' },
+                { label: 'Employer Pension', data: simData.penData, backgroundColor: '#e67e22', stack: 'a' },
+                { label: 'Withdraw Non-Reg', data: simData.nrD, backgroundColor: '#3498db', stack: 'a' },
+                { label: 'Withdraw RRSP', data: simData.rD, backgroundColor: '#9b59b6', stack: 'a' },
+                { label: 'Withdraw TFSA', data: simData.tD, backgroundColor: '#1abc9c', stack: 'a' }
+            ]},
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                interaction: { mode: 'index', intersect: false },
+                scales: { x: { stacked: true }, y: { stacked: true } }, 
+                plugins: { 
+                    legend: { position: 'bottom' },
+                    tooltip: { callbacks: currencyTooltipCallback }
+                } 
+            }
+        });
+    } else {
+        chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: simData.labels, datasets: [
+                { label: 'Non-Reg Balance', data: simData.nonRegHist, backgroundColor: 'rgba(52, 152, 219, 0.7)', borderColor: '#2980b9', borderWidth: 2, fill: true, stack: 'Stack 0', pointRadius:0 },
+                { label: 'RRSP Balance', data: simData.rrspHist, backgroundColor: 'rgba(155, 89, 182, 0.7)', borderColor: '#8e44ad', borderWidth: 2, fill: true, stack: 'Stack 0', pointRadius:0 },
+                { label: 'TFSA Balance', data: simData.tfsaHist, backgroundColor: 'rgba(26, 188, 156, 0.7)', borderColor: '#16a085', borderWidth: 2, fill: true, stack: 'Stack 0', pointRadius:0 }
+            ]},
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                interaction: { mode: 'index', intersect: false },
+                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, 
+                plugins: { 
+                    legend: { position: 'bottom' },
+                    tooltip: { callbacks: currencyTooltipCallback }
+                } 
+            }
+        });
+    }
 }
 
 function runRetirementSimulation() {
@@ -485,20 +575,13 @@ function runRetirementSimulation() {
 
     // Accumulation logic
     for(let i=0; i<yrsToRet*12; i++){
-        // Apply pre-retirement dynamic events on the birthday month
         if (i % 12 === 0) {
             let currentYearAge = curAge + Math.floor(i/12);
-            events.forEach(ev => {
-                if(ev.amount !== 0 && currentYearAge === ev.age) {
-                    nonReg += ev.amount;
-                }
-            });
+            events.forEach(ev => { if(ev.amount !== 0 && currentYearAge === ev.age) nonReg += ev.amount; });
         }
-        
         rrsp += rrspContrib; 
         tfsa += tfsaContrib; 
         nonReg += nonRegContrib;
-        
         rrsp *= (1+returnPre/12); tfsa *= (1+returnPre/12); nonReg *= (1+returnPre/12);
     }
     
@@ -506,14 +589,11 @@ function runRetirementSimulation() {
     let formattedSavings = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(totalSavedAtRetirement);
 
     // Employer Pension Penalty Calculation
-    let mult = 1.0;
-    let pText = "";
-    
+    let mult = 1.0, pText = "";
     if(penType === 'federal'){
         let target = (fedG === "1") ? 60 : 65;
         let sMin = (fedG === "1") ? 55 : 60;
         let unreducedEarly = (retAge >= sMin && yos >= 30);
-        
         if(penStartAge < target && !unreducedEarly){
             let penaltyYrs = target - penStartAge;
             let penaltyPct = Math.round(penaltyYrs * 5);
@@ -541,65 +621,50 @@ function runRetirementSimulation() {
     
     mult = Math.max(0.1, mult);
 
-    // Calculate CPP Multiplier
     let cppMultiplier = 1.0;
-    if (cppStartAge < 65) {
-        cppMultiplier = 1.0 - ((65 - cppStartAge) * 0.072);
-    } else if (cppStartAge > 65) {
-        cppMultiplier = 1.0 + ((cppStartAge - 65) * 0.084);
-    }
+    if (cppStartAge < 65) cppMultiplier = 1.0 - ((65 - cppStartAge) * 0.072);
+    else if (cppStartAge > 65) cppMultiplier = 1.0 + ((cppStartAge - 65) * 0.084);
 
-    // Calculate OAS Multiplier
     let oasMultiplier = 1.0;
-    if (oasStartAge > 65) {
-        oasMultiplier = 1.0 + ((oasStartAge - 65) * 0.072);
-    }
+    if (oasStartAge > 65) oasMultiplier = 1.0 + ((oasStartAge - 65) * 0.072);
 
-    const baseCPP = 11500;
-    const baseOAS = 9100;
-    const oasThresholdBase = 95000;
-    const adjustedCPP = baseCPP * cppMultiplier;
-    const adjustedOAS = baseOAS * oasMultiplier;
+    const baseCPP = 11500, baseOAS = 9100, oasThresholdBase = 95000;
+    const adjustedCPP = baseCPP * cppMultiplier, adjustedOAS = baseOAS * oasMultiplier;
 
     let targetNet = goal * Math.pow(1+inf, yrsToRet);
     let pBase = (0.02 * yos * b5 * mult) * Math.pow(1+inf, yrsToRet);
     let pDrop = (0.00625 * yos * 73000 * mult) * Math.pow(1+inf, yrsToRet);
 
-    let simAge = retAge;
-    let ranOutAge = null;
-    let experiencedClawback = false;
+    let simAge = retAge, ranOutAge = null, experiencedClawback = false;
     
-    const labels=[], cppOasData=[], penData=[], nrD=[], rD=[], tD=[], targetLine=[];
+    // Clear Global Chart Data Array
+    simData = { labels: [], cppOasData: [], penData: [], nrD: [], rD: [], tD: [], targetLine: [], rrspHist: [], tfsaHist: [], nonRegHist: [] };
 
     while(simAge <= lifeExp){
-        labels.push(`Age ${simAge}`);
-        targetLine.push(targetNet);
+        simData.labels.push(`Age ${simAge}`);
+        simData.targetLine.push(targetNet);
         
-        // Apply post-retirement dynamic events
-        events.forEach(ev => {
-            if(ev.amount !== 0 && simAge === ev.age && simAge >= retAge) {
-                nonReg += ev.amount;
-            }
-        });
+        events.forEach(ev => { if(ev.amount !== 0 && simAge === ev.age && simAge >= retAge) nonReg += ev.amount; });
+        
+        // Record Start-of-Year Balances for the Portfolio Chart
+        simData.rrspHist.push(Math.max(0, rrsp));
+        simData.tfsaHist.push(Math.max(0, tfsa));
+        simData.nonRegHist.push(Math.max(0, nonReg));
         
         let pInc = (penType !== 'none' && simAge >= penStartAge) ? (simAge >= 65 ? Math.max(0, pBase - pDrop) : pBase) : 0;
         
-        let cInc = 0;
-        let currentOasReceived = 0;
-        if (simAge >= cppStartAge) {
-            cInc += adjustedCPP * Math.pow(1+inf, simAge - curAge);
-        }
+        let cInc = 0, currentOasReceived = 0;
+        if (simAge >= cppStartAge) cInc += adjustedCPP * Math.pow(1+inf, simAge - curAge);
         if (simAge >= oasStartAge) {
             currentOasReceived = adjustedOAS * Math.pow(1+inf, simAge - curAge);
             cInc += currentOasReceived;
         }
         
-        penData.push(pInc); cppOasData.push(cInc);
+        simData.penData.push(pInc); simData.cppOasData.push(cInc);
 
         let dNR=0, dR=0, dT=0;
         let taxableSum = pInc + cInc;
         
-        // Initial Net calculation before drawdown loop
         let currentOasThreshold = oasThresholdBase * Math.pow(1+inf, simAge - curAge);
         let clawback = 0;
         if (taxableSum > currentOasThreshold && currentOasReceived > 0) {
@@ -608,7 +673,7 @@ function runRetirementSimulation() {
         }
         let net = taxableSum - estimateTaxes(taxableSum, inf, simAge - curAge) - clawback;
         
-        // Drawdown Loop (Gross-Up logic)
+        // Drawdown Loop
         while(net < (targetNet - 10)){
             let chunk = 250;
             if(nonReg >= chunk){ nonReg -= chunk; dNR += chunk; taxableSum += chunk*0.25; }
@@ -616,20 +681,17 @@ function runRetirementSimulation() {
             else if(tfsa >= chunk){ tfsa -= chunk; dT += chunk; }
             else break;
             
-            // Recalculate taxes and potential clawback with the newly added income
             if (taxableSum > currentOasThreshold && currentOasReceived > 0) {
                 clawback = Math.min((taxableSum - currentOasThreshold) * 0.15, currentOasReceived);
                 if (clawback > 0) experiencedClawback = true;
-            } else {
-                clawback = 0;
-            }
+            } else clawback = 0;
             
             net = (pInc + cInc + dNR + dR + dT) - estimateTaxes(taxableSum, inf, simAge - curAge) - clawback;
         }
 
         if(net < (targetNet - 500) && ranOutAge === null) ranOutAge = simAge;
 
-        nrD.push(dNR); rD.push(dR); tD.push(dT);
+        simData.nrD.push(dNR); simData.rD.push(dR); simData.tD.push(dT);
         rrsp *= (1+returnPost); tfsa *= (1+returnPost); nonReg *= (1+returnPost);
         targetNet *= (1+inf); pBase *= (1+inf); pDrop *= (1+inf);
         simAge++;
@@ -643,6 +705,7 @@ function runRetirementSimulation() {
     let formattedLegacyTarget = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(legacyTargetNominal);
 
     document.getElementById('resultsArea').style.display = 'block';
+    document.getElementById('chartToggle').style.display = 'block';
     const tr = document.getElementById('textResults');
     tr.className = '';
     
@@ -651,16 +714,12 @@ function runRetirementSimulation() {
     
     let eventTextList = "";
     events.forEach(ev => {
-        if (ev.amount > 0) {
-            eventTextList += `<li><strong>Planned Windfall:</strong> +$${ev.amount.toLocaleString()} added to savings at age ${ev.age} (${ev.name}).</li>`;
-        } else if (ev.amount < 0) {
-            eventTextList += `<li><strong>Planned Expense:</strong> -$${Math.abs(ev.amount).toLocaleString()} deducted from savings at age ${ev.age} (${ev.name}).</li>`;
-        }
+        if (ev.amount > 0) eventTextList += `<li><strong>Planned Windfall:</strong> +$${ev.amount.toLocaleString()} added to savings at age ${ev.age} (${ev.name}).</li>`;
+        else if (ev.amount < 0) eventTextList += `<li><strong>Planned Expense:</strong> -$${Math.abs(ev.amount).toLocaleString()} deducted from savings at age ${ev.age} (${ev.name}).</li>`;
     });
 
     let clawbackWarning = experiencedClawback 
-        ? `<li style="color: var(--danger);"><strong>OAS Clawback Triggered:</strong> Your taxable income exceeded the maximum threshold during retirement. The engine automatically paid the 15% recovery tax by grossing up your withdrawals.</li>` 
-        : "";
+        ? `<li style="color: var(--danger);"><strong>OAS Clawback Triggered:</strong> Your taxable income exceeded the maximum threshold. The engine automatically paid the recovery tax by grossing up your withdrawals.</li>` : "";
         
     let estateHtml = `<li><strong>Projected Remaining Assets at Age ${lifeExp}:</strong> ${formattedFinalEstate} ${legacyPercent > 0 ? `<em>(Target: ${legacyPercent}% or ${formattedLegacyTarget})</em>` : ''}</li>`;
 
@@ -682,7 +741,6 @@ function runRetirementSimulation() {
                 <span class="highlight">⚠️ Income Secure, but Estate Goal Missed</span>
                 <p>Your income sources are projected to last, but your remaining assets at age ${lifeExp} fall short of your ${legacyPercent}% estate target.</p>
                 ${summaryHtml}
-                <p style="font-size:0.9em; margin-top:10px;"><em>Tip: Try lowering your desired target income or increasing contributions to preserve more of your portfolio for your estate.</em></p>
             `;
         } else {
             tr.classList.add('success');
@@ -698,23 +756,10 @@ function runRetirementSimulation() {
             <span class="highlight">⚠️ Income Gap Predicted</span>
             <p>Your total income is projected to fall below your target starting at age <strong>${ranOutAge}</strong>.</p>
             ${summaryHtml}
-            <p style="font-size:0.9em; margin-top:10px;"><em>Tip: Try deferring your pension start age, adjusting your savings contributions, or lowering your desired target income to bridge this gap.</em></p>
         `;
     }
 
-    if(incomeChartInstance) incomeChartInstance.destroy();
-    incomeChartInstance = new Chart(document.getElementById('incomeChart').getContext('2d'), {
-        type: 'bar',
-        data: { labels: labels, datasets: [
-            { type: 'line', label: 'Goal Net', data: targetLine, borderColor: '#2ecc71', borderWidth: 3, pointRadius:0 },
-            { label: 'CPP + OAS', data: cppOasData, backgroundColor: '#f1c40f', stack: 'a' },
-            { label: 'Employer Pension', data: penData, backgroundColor: '#e67e22', stack: 'a' },
-            { label: 'Withdraw Non-Reg', data: nrD, backgroundColor: '#3498db', stack: 'a' },
-            { label: 'Withdraw RRSP', data: rD, backgroundColor: '#9b59b6', stack: 'a' },
-            { label: 'Withdraw TFSA', data: tD, backgroundColor: '#1abc9c', stack: 'a' }
-        ]},
-        options: { responsive: true, maintainAspectRatio: false, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { position: 'bottom' } } }
-    });
+    renderChart();
 }
 // Initialize the UI on load
 togglePensionFields();

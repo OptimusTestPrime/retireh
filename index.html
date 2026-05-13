@@ -225,7 +225,49 @@
 
         <!-- Section 7 -->
         <div class="form-section">
-            <h2>7. Goals (Income & Estate)</h2>
+            <h2>7. Annuity Purchase (Optional)</h2>
+            <p style="font-size: 0.9em; margin-top: 0; color: #555;">Model trading a portion of your savings for guaranteed, lifelong income.</p>
+            <div class="flex-row">
+                <div class="flex-col">
+                    <label>Purchase Cost ($):</label>
+                    <span class="note">Lump sum paid to insurance company.</span>
+                    <input type="number" id="annuityPurchase" value="0">
+                </div>
+                <div class="flex-col">
+                    <label>Purchase Age:</label>
+                    <span class="note">Age when the funds are deducted.</span>
+                    <input type="number" id="annuityAge" value="65">
+                </div>
+                <div class="flex-col">
+                    <label>Fund Purchase From:</label>
+                    <span class="note">Account to withdraw the lump sum from.</span>
+                    <select id="annuitySource">
+                        <option value="rrsp" selected>RRSP / RRIF</option>
+                        <option value="nonReg">Non-Registered</option>
+                        <option value="tfsa">TFSA</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex-row" style="margin-top: 15px;">
+                <div class="flex-col">
+                    <label>Annual Payout ($):</label>
+                    <span class="note">Guaranteed income you receive for life.</span>
+                    <input type="number" id="annuityPayout" value="0">
+                </div>
+                <div class="flex-col">
+                    <label>Indexed to Inflation?</label>
+                    <span class="note">Does the payout grow yearly, or stay flat?</span>
+                    <select id="annuityIndexed">
+                        <option value="no" selected>No (Flat Payout)</option>
+                        <option value="yes">Yes (Grows with Inflation)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 8 -->
+        <div class="form-section">
+            <h2>8. Goals (Income & Estate)</h2>
             <div class="flex-row">
                 <div class="flex-col">
                     <div style="display: flex; justify-content: space-between; align-items: flex-end;">
@@ -273,6 +315,9 @@
         <h3>Privacy & Data Security</h3>
         <p>This calculator is completely client-side. <strong>No personal or financial data is collected, stored, or transmitted to any server.</strong> All calculations happen securely and locally on your own device.</p>
 
+        <h3>Annuities</h3>
+        <p>If modeled, the purchase cost is deducted from your chosen savings account at the specified age. To simplify the tax modeling for diverse annuity products, the resulting payout is treated as 100% taxable regular income (mirroring a standard RRSP/RRIF-funded annuity) and is dynamically added to your guaranteed income stream to reduce your reliance on portfolio withdrawals.</p>
+
         <h3>Estate / Legacy Target</h3>
         <p>You can optionally specify a percentage of your initial retirement savings that you wish to have remaining at the end of your projection. The calculator evaluates if your income needs will deplete your portfolio past this threshold, adjusting your plan's "success" status accordingly.</p>
 
@@ -301,7 +346,7 @@
         <ul>
             <li><strong>Account Treatment:</strong> 
                 <ul style="margin-top: 5px; list-style-type: circle;">
-                    <li><em>Pensions, CPP, OAS, and RRSP/RRIF:</em> Treated as 100% taxable regular income.</li>
+                    <li><em>Pensions, Annuities, CPP, OAS, and RRSP/RRIF:</em> Treated as 100% taxable regular income.</li>
                     <li><em>TFSA:</em> Treated as 100% tax-free.</li>
                     <li><em>Non-Registered:</em> Approximated as 25% taxable (assuming half tax-free principal and half capital gains at a 50% inclusion rate).</li>
                 </ul>
@@ -486,6 +531,7 @@ function renderChart() {
                 { type: 'line', label: 'Goal Net', data: simData.targetLine, borderColor: '#2ecc71', borderWidth: 3, pointRadius:0 },
                 { label: 'CPP + OAS', data: simData.cppOasData, backgroundColor: '#f1c40f', stack: 'a' },
                 { label: 'Employer Pension', data: simData.penData, backgroundColor: '#e67e22', stack: 'a' },
+                { label: 'Annuity Income', data: simData.annData, backgroundColor: '#e74c3c', stack: 'a' },
                 { label: 'Withdraw Non-Reg', data: simData.nrD, backgroundColor: '#3498db', stack: 'a' },
                 { label: 'Withdraw RRSP', data: simData.rD, backgroundColor: '#9b59b6', stack: 'a' },
                 { label: 'Withdraw TFSA', data: simData.tD, backgroundColor: '#1abc9c', stack: 'a' }
@@ -543,6 +589,13 @@ function runRetirementSimulation() {
     // Government Benefits Start Ages
     const cppStartAge = parseInt(document.getElementById('cppStartAge').value) || 65;
     const oasStartAge = parseInt(document.getElementById('oasStartAge').value) || 65;
+    
+    // Annuity Inputs
+    const annCost = parseFloat(document.getElementById('annuityPurchase').value) || 0;
+    const annAge = parseInt(document.getElementById('annuityAge').value) || 65;
+    const annSource = document.getElementById('annuitySource').value;
+    const annPayoutBase = parseFloat(document.getElementById('annuityPayout').value) || 0;
+    const annIndexed = document.getElementById('annuityIndexed').value === 'yes';
 
     // Growth Rates
     const inf = parseFloat(document.getElementById('inflationRate').value) / 100;
@@ -572,12 +625,21 @@ function runRetirementSimulation() {
     if (penStartAge < retAge) return alert("You cannot start collecting a pension before you stop working.");
     if (cppStartAge < 60 || cppStartAge > 70) return alert("CPP start age must be between 60 and 70.");
     if (oasStartAge < 65 || oasStartAge > 70) return alert("OAS start age must be between 65 and 70.");
+    
+    // Helper function to deduct funds cascadingly
+    const applyDeduction = (amount, preferred) => {
+        let rem = amount;
+        if (preferred === 'rrsp') { let t = Math.min(rrsp, rem); rrsp-=t; rem-=t; t = Math.min(nonReg, rem); nonReg-=t; rem-=t; tfsa-=rem; }
+        else if (preferred === 'tfsa') { let t = Math.min(tfsa, rem); tfsa-=t; rem-=t; t = Math.min(nonReg, rem); nonReg-=t; rem-=t; rrsp-=rem; }
+        else { let t = Math.min(nonReg, rem); nonReg-=t; rem-=t; t = Math.min(tfsa, rem); tfsa-=t; rem-=t; rrsp-=rem; }
+    };
 
     // Accumulation logic
     for(let i=0; i<yrsToRet*12; i++){
         if (i % 12 === 0) {
             let currentYearAge = curAge + Math.floor(i/12);
             events.forEach(ev => { if(ev.amount !== 0 && currentYearAge === ev.age) nonReg += ev.amount; });
+            if (annCost > 0 && currentYearAge === annAge) applyDeduction(annCost, annSource);
         }
         rrsp += rrspContrib; 
         tfsa += tfsaContrib; 
@@ -638,13 +700,14 @@ function runRetirementSimulation() {
     let simAge = retAge, ranOutAge = null, experiencedClawback = false;
     
     // Clear Global Chart Data Array
-    simData = { labels: [], cppOasData: [], penData: [], nrD: [], rD: [], tD: [], targetLine: [], rrspHist: [], tfsaHist: [], nonRegHist: [] };
+    simData = { labels: [], cppOasData: [], penData: [], annData: [], nrD: [], rD: [], tD: [], targetLine: [], rrspHist: [], tfsaHist: [], nonRegHist: [] };
 
     while(simAge <= lifeExp){
         simData.labels.push(`Age ${simAge}`);
         simData.targetLine.push(targetNet);
         
         events.forEach(ev => { if(ev.amount !== 0 && simAge === ev.age && simAge >= retAge) nonReg += ev.amount; });
+        if (annCost > 0 && simAge === annAge && simAge >= retAge) applyDeduction(annCost, annSource);
         
         // Record Start-of-Year Balances for the Portfolio Chart
         simData.rrspHist.push(Math.max(0, rrsp));
@@ -660,10 +723,17 @@ function runRetirementSimulation() {
             cInc += currentOasReceived;
         }
         
-        simData.penData.push(pInc); simData.cppOasData.push(cInc);
+        let currentAnnPayout = 0;
+        if (simAge >= annAge && annPayoutBase > 0) {
+            currentAnnPayout = annIndexed ? annPayoutBase * Math.pow(1+inf, simAge - annAge) : annPayoutBase;
+        }
+        
+        simData.penData.push(pInc); 
+        simData.cppOasData.push(cInc);
+        simData.annData.push(currentAnnPayout);
 
         let dNR=0, dR=0, dT=0;
-        let taxableSum = pInc + cInc;
+        let taxableSum = pInc + cInc + currentAnnPayout;
         
         let currentOasThreshold = oasThresholdBase * Math.pow(1+inf, simAge - curAge);
         let clawback = 0;
@@ -686,7 +756,7 @@ function runRetirementSimulation() {
                 if (clawback > 0) experiencedClawback = true;
             } else clawback = 0;
             
-            net = (pInc + cInc + dNR + dR + dT) - estimateTaxes(taxableSum, inf, simAge - curAge) - clawback;
+            net = (pInc + cInc + currentAnnPayout + dNR + dR + dT) - estimateTaxes(taxableSum, inf, simAge - curAge) - clawback;
         }
 
         if(net < (targetNet - 500) && ranOutAge === null) ranOutAge = simAge;
@@ -717,6 +787,11 @@ function runRetirementSimulation() {
         if (ev.amount > 0) eventTextList += `<li><strong>Planned Windfall:</strong> +$${ev.amount.toLocaleString()} added to savings at age ${ev.age} (${ev.name}).</li>`;
         else if (ev.amount < 0) eventTextList += `<li><strong>Planned Expense:</strong> -$${Math.abs(ev.amount).toLocaleString()} deducted from savings at age ${ev.age} (${ev.name}).</li>`;
     });
+    
+    let annuitySummaryText = "";
+    if (annCost > 0 || annPayoutBase > 0) {
+        annuitySummaryText = `<li><strong>Annuity Purchase:</strong> You utilized $${annCost.toLocaleString()} to purchase an annuity at age ${annAge}, providing a guaranteed $${annPayoutBase.toLocaleString()}/yr (${annIndexed ? 'growing with inflation' : 'flat payout'}).</li>`;
+    }
 
     let clawbackWarning = experiencedClawback 
         ? `<li style="color: var(--danger);"><strong>OAS Clawback Triggered:</strong> Your taxable income exceeded the maximum threshold. The engine automatically paid the recovery tax by grossing up your withdrawals.</li>` : "";
@@ -728,6 +803,7 @@ function runRetirementSimulation() {
             <li><strong>Total Personal Savings at Retirement:</strong> ${formattedSavings}</li>
             <li>${pText}</li>
             <li><strong>Government Benefits Timing:</strong> ${cppText} ${oasText}</li>
+            ${annuitySummaryText}
             ${eventTextList}
             ${clawbackWarning}
             ${estateHtml}

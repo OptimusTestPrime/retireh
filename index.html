@@ -31,11 +31,11 @@
         
         /* Partner Labels */
         .partner-label { font-size: 1.05rem; color: var(--primary); margin-bottom: 12px; margin-top: 5px; text-transform: uppercase; border-left: 4px solid var(--danger); padding-left: 10px; }
-        .p1-label { display: none; } /* Hidden by default in individual mode */
+        .p1-label { display: none; } 
         
         .form-section { background: #f9fbfd; border-left: 5px solid var(--secondary); padding: 20px; margin-bottom: 25px; border-radius: 4px; }
         .flex-row { display: flex; gap: 20px; flex-wrap: wrap; }
-        .flex-col { flex: 1; min-width: 200px; }
+        .flex-col { flex: 1; min-width: 150px; }
         label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; font-size: 0.95rem; }
         select, input[type="number"], input[type="text"] { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccd1d9; border-radius: 6px; box-sizing: border-box; font-size: 16px; background: #fff; }
         
@@ -103,9 +103,9 @@
     <form id="retirementForm">
         <!-- Section 1 -->
         <div class="form-section">
-            <h2>1. Timeline</h2>
+            <h2>1. Timeline & Income</h2>
             <div class="flex-row">
-                <div class="flex-col">
+                <div class="flex-col" style="max-width: 300px;">
                     <label>Province/Territory:</label>
                     <select id="province">
                         <option value="AB">Alberta</option>
@@ -127,17 +127,19 @@
             
             <h3 class="partner-label p1-label">Partner 1</h3>
             <div class="flex-row">
-                <div class="flex-col"><label>Current Age:</label><input type="number" id="p1_currentAge" value="40"></div>
-                <div class="flex-col"><label>Age You Stop Working:</label><input type="number" id="p1_retirementAge" value="65"></div>
+                <div class="flex-col"><label>Current Age:</label><input type="number" id="p1_currentAge" value="49"></div>
+                <div class="flex-col"><label>Retirement Age:</label><input type="number" id="p1_retirementAge" value="60"></div>
                 <div class="flex-col"><label>Project Until Age:</label><input type="number" id="p1_lifeExpectancy" value="90"></div>
+                <div class="flex-col"><label>Current Net Salary ($):</label><input type="number" id="p1_netSalary" value="70000"></div>
             </div>
 
             <div id="p2_timeline" class="hidden">
                 <h3 class="partner-label">Partner 2</h3>
                 <div class="flex-row">
-                    <div class="flex-col"><label>Current Age:</label><input type="number" id="p2_currentAge" value="40"></div>
-                    <div class="flex-col"><label>Age You Stop Working:</label><input type="number" id="p2_retirementAge" value="65"></div>
+                    <div class="flex-col"><label>Current Age:</label><input type="number" id="p2_currentAge" value="49"></div>
+                    <div class="flex-col"><label>Retirement Age:</label><input type="number" id="p2_retirementAge" value="65"></div>
                     <div class="flex-col"><label>Project Until Age:</label><input type="number" id="p2_lifeExpectancy" value="90"></div>
+                    <div class="flex-col"><label>Current Net Salary ($):</label><input type="number" id="p2_netSalary" value="70000"></div>
                 </div>
             </div>
         </div>
@@ -206,11 +208,6 @@
                 <option value="3">3 Events</option>
                 <option value="4">4 Events</option>
                 <option value="5">5 Events</option>
-                <option value="6">6 Events</option>
-                <option value="7">7 Events</option>
-                <option value="8">8 Events</option>
-                <option value="9">9 Events</option>
-                <option value="10">10 Events</option>
             </select>
             <div id="dynamicEventsContainer"></div>
         </div>
@@ -244,56 +241,56 @@
                     </div>
                 </div>
             </div>
+            <div style="margin-top: 25px; text-align: center; border-top: 1px solid #e0e0e0; padding-top: 15px;">
+                <button type="button" id="btnOptimize" class="btn-toggle active" onclick="optimizeBenefits()" style="border-radius: 6px; padding: 12px 20px; font-size: 1.05rem;">✨ Auto-Optimize Start Ages</button>
+                <span class="note" style="display:block; margin-top:8px;">Runs thousands of simulations to find the start dates that maximize your final estate.</span>
+            </div>
         </div>
 
-        <!-- Section 6 -->
+        <!-- Section 6: Pensions -->
         <div class="form-section">
-            <h2>6. Employer Pension Selection</h2>
+            <h2>6. Employer Pensions (PSSA Logic)</h2>
             <h3 class="partner-label p1-label">Partner 1</h3>
             <select id="p1_pensionType" onchange="togglePensionFields('p1')">
-                <option value="none" selected>No Employer Pension</option>
-                <option value="federal">Federal Public Service (PSSA)</option>
+                <option value="none">No Employer Pension</option>
+                <option value="federal" selected>Federal Public Service (PSSA)</option>
                 <option value="provincial">Provincial Public Service (85 Factor)</option>
             </select>
             
-            <div id="p1_pensionDetails" class="pension-box hidden">
+            <div id="p1_pensionDetails" class="pension-box">
                 <div class="flex-row">
-                    <div class="flex-col">
-                        <label>Age to Start Pension:</label>
-                        <input type="number" id="p1_penStart" value="65">
+                    <div class="flex-col pssa-only">
+                        <label>Start Date Class:</label>
+                        <select id="p1_pssaGroup">
+                            <option value="1" selected>Joined Before 2013 (Group 1)</option>
+                            <option value="2">Joined 2013 or Later (Group 2)</option>
+                        </select>
                     </div>
-                    <div class="flex-col">
-                        <label>Service Years at Retirement:</label>
-                        <input type="number" id="p1_penYrs" value="25">
-                    </div>
-                    <div class="flex-col">
-                        <label>Best 5 Avg Salary ($):</label>
-                        <input type="number" id="p1_penSal" value="80000">
-                    </div>
+                    <div class="flex-col"><label>Pension Start Age:</label><input type="number" id="p1_penStart" value="60"></div>
+                    <div class="flex-col"><label>Service Yrs at Retirement:</label><input type="number" id="p1_penYrs" value="25"></div>
+                    <div class="flex-col"><label>Best 5 Avg Salary ($):</label><input type="number" id="p1_penSal" value="105000"></div>
                 </div>
             </div>
 
             <div id="p2_pensionRow" class="hidden" style="margin-top: 20px;">
                 <h3 class="partner-label">Partner 2</h3>
                 <select id="p2_pensionType" onchange="togglePensionFields('p2')">
-                    <option value="none" selected>No Employer Pension</option>
-                    <option value="federal">Federal Public Service (PSSA)</option>
+                    <option value="none">No Employer Pension</option>
+                    <option value="federal" selected>Federal Public Service (PSSA)</option>
                     <option value="provincial">Provincial Public Service (85 Factor)</option>
                 </select>
-                <div id="p2_pensionDetails" class="pension-box hidden">
+                <div id="p2_pensionDetails" class="pension-box">
                     <div class="flex-row">
-                        <div class="flex-col">
-                            <label>Age to Start Pension:</label>
-                            <input type="number" id="p2_penStart" value="65">
+                        <div class="flex-col pssa-only">
+                            <label>Start Date Class:</label>
+                            <select id="p2_pssaGroup">
+                                <option value="1" selected>Joined Before 2013 (Group 1)</option>
+                                <option value="2">Joined 2013 or Later (Group 2)</option>
+                            </select>
                         </div>
-                        <div class="flex-col">
-                            <label>Service Years at Retirement:</label>
-                            <input type="number" id="p2_penYrs" value="25">
-                        </div>
-                        <div class="flex-col">
-                            <label>Best 5 Avg Salary ($):</label>
-                            <input type="number" id="p2_penSal" value="80000">
-                        </div>
+                        <div class="flex-col"><label>Pension Start Age:</label><input type="number" id="p2_penStart" value="65"></div>
+                        <div class="flex-col"><label>Service Yrs at Retirement:</label><input type="number" id="p2_penYrs" value="25"></div>
+                        <div class="flex-col"><label>Best 5 Avg Salary ($):</label><input type="number" id="p2_penSal" value="95000"></div>
                     </div>
                 </div>
             </div>
@@ -316,7 +313,6 @@
                 </div>
                 <div class="flex-col">
                     <label>Fund Purchase From:</label>
-                    <span class="note">Account to withdraw the lump sum from.</span>
                     <select id="annuitySource">
                         <option value="rrsp" selected>RRSP / RRIF</option>
                         <option value="nonReg">Non-Registered</option>
@@ -332,7 +328,6 @@
                 </div>
                 <div class="flex-col">
                     <label>Indexed to Inflation?</label>
-                    <span class="note">Does the payout grow yearly, or stay flat?</span>
                     <select id="annuityIndexed">
                         <option value="no" selected>No (Flat Payout)</option>
                         <option value="yes">Yes (Grows with Inflation)</option>
@@ -351,7 +346,7 @@
                         <button type="button" class="btn-link" onclick="openModal('budgetModal')" style="padding: 0;">Need help estimating?</button>
                     </div>
                     <span class="note" style="margin-top: 5px;">The engine automatically gross-up withdrawals to cover taxes and clawbacks.</span>
-                    <input type="number" id="desiredIncome" value="60000">
+                    <input type="number" id="desiredIncome" value="80000">
                 </div>
                 <div class="flex-col">
                     <label>Target Estate (% of Retirement Savings):</label>
@@ -376,7 +371,7 @@
     <footer>
         <p>&copy; 2026 RetirEh Planner.</p>
         <p><strong>Privacy Note:</strong> This tool runs entirely in your browser. No personal or financial data is collected, stored, or transmitted anywhere.</p>
-        <p><strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice. The calculations rely on simplified assumptions regarding future inflation, market returns, and blended Canadian tax brackets, which may not accurately reflect your specific circumstances or future changes in legislation. Always consult with a certified financial planner, accountant, or qualified professional before making significant financial or retirement decisions.</p>
+        <p><strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice.</p>
         <a href="https://buymeacoffee.com/coffeeforcurling" target="_blank" class="bmc-link">☕ Buy Me A Coffee</a>
     </footer>
 </div>
@@ -388,55 +383,23 @@
         <h2>Assumptions & Methodology</h2>
         <p>This tool models your retirement by running a year-by-year simulation based on standard Canadian rules and your economic inputs.</p>
 
-        <h3>Privacy & Data Security</h3>
-        <p>This calculator is completely client-side. <strong>No personal or financial data is collected, stored, or transmitted to any server.</strong> All calculations happen securely and locally on your own device.</p>
-        
-        <h3>Household Mode & Tax Splitting</h3>
-        <p>When "Couple / Household" is selected, the engine aggregates your total required income. For calculating estimated taxes, it assumes you utilize Canadian pension income splitting provisions and evenly distributes the taxable portion of your withdrawals between both partners to minimize the household tax burden.</p>
+        <h3>Staggered Retirement (Transition Phase)</h3>
+        <p>If one partner retires before the other, the simulation enters a transition phase. The working partner's "Current Net Salary" is applied to directly offset the household's desired income goal. Their RRSP/TFSA contributions also continue until they reach their designated retirement age.</p>
 
-        <h3>Annuities</h3>
-        <p>If modeled, the purchase cost is deducted from your chosen savings account at the specified age. To simplify the tax modeling for diverse annuity products, the resulting payout is treated as 100% taxable regular income (mirroring a standard RRSP/RRIF-funded annuity) and is dynamically added to your guaranteed income stream to reduce your reliance on portfolio withdrawals.</p>
-
-        <h3>Estate / Legacy Target</h3>
-        <p>You can optionally specify a percentage of your initial retirement savings that you wish to have remaining at the end of your projection. The calculator evaluates if your income needs will deplete your portfolio past this threshold, adjusting your plan's "success" status accordingly.</p>
-
-        <h3>One-Time Events (Windfalls & Expenses)</h3>
+        <h3>Federal Pension (PSSA) Logic</h3>
         <ul>
-            <li><strong>Multiple Events:</strong> Model up to 10 specific life events based on Partner 1's age. Use negative numbers for planned large purchases. The model pulls expenses out of your Non-Registered savings first.</li>
-            <li><strong>Principal Residence Exemption:</strong> In Canada, the sale of your primary home is generally exempt from capital gains taxes. We deposit positive windfalls directly into your Non-Registered account without triggering a tax event.</li>
-            <li><strong>Inheritances:</strong> Canadian inheritances are modeled as tax-free cash injections, as taxes are handled by the estate prior to distribution.</li>
+            <li><strong>Bridge Benefit:</strong> Paid from retirement until age 65. It represents the portion of your pension that is replaced by CPP.</li>
+            <li><strong>Group 1 (Before 2013):</strong> Unreduced pension at age 60, or age 55 with 30 years of service. Otherwise, a 5% penalty applies per year early.</li>
+            <li><strong>Group 2 (2013 or Later):</strong> Unreduced pension at age 65, or age 60 with 30 years of service. Otherwise, a 5% penalty applies per year early.</li>
         </ul>
-        
+
         <h3>Government Benefits (CPP & OAS)</h3>
         <ul>
-            <li><strong>CPP (Canada Pension Plan):</strong> Can be started between age 60 and 70. Starting early permanently reduces your pension by 7.2% per year before 65. Delaying increases it by 8.4% per year after 65. We assume an average base payout of ~$11,500/year (today's dollars) at age 65.</li>
-            <li><strong>OAS (Old Age Security):</strong> Can be started between age 65 and 70. Delaying increases the payout by 7.2% per year after 65. We assume a full base payout of ~$9,100/year (today's dollars) at age 65.</li>
-            <li><strong>OAS Clawback (Recovery Tax):</strong> If your taxable income exceeds the OAS threshold (~$95,000 in today's dollars), the government claws back 15% of the excess, up to the full amount of your OAS. <em>Our engine accurately models this. It dynamically indexes the $95k threshold to inflation and automatically calculates the 15% penalty if your taxable withdrawals cross the line, grossing up your savings withdrawals to cover the difference.</em></li>
+            <li><strong>CPP:</strong> Starts between age 60 and 70. Starting early permanently reduces your pension by 7.2% per year before 65. Delaying increases it by 8.4% per year after 65. Base assumed: ~$11,500/year at 65.</li>
+            <li><strong>OAS:</strong> Starts between age 65 and 70. Delaying increases the payout by 7.2% per year after 65. Base assumed: ~$9,100/year at 65.</li>
+            <li><strong>OAS Clawback:</strong> If your taxable income exceeds the OAS threshold (~$95,000 indexed to inflation), the government claws back 15% of the excess. This engine automatically calculates and pays this penalty.</li>
         </ul>
 
-        <h3>Employer Pension Rules</h3>
-        <ul>
-            <li><strong>Federal (PSSA):</strong> Applies a 5% penalty per year if you collect before age 60 (Group 1) or 65 (Group 2), unless you have 30 years of service. An estimated bridge benefit is paid until age 65.</li>
-            <li><strong>Provincial (85 Factor):</strong> Applies a 3% penalty for every year you are short of reaching 85 points (Age + Years of Service) or age 65.</li>
-        </ul>
-
-        <h3>Taxation & Withdrawal Strategy</h3>
-        <p style="margin-top: 10px; margin-bottom: 5px;">The engine calculates the "Gross" amount you need to withdraw to pay the CRA and hit your target <strong>Net</strong> income:</p>
-        <ul>
-            <li><strong>Account Treatment:</strong> 
-                <ul style="margin-top: 5px; list-style-type: circle;">
-                    <li><em>Pensions, Annuities, CPP, OAS, and RRSP/RRIF:</em> Treated as 100% taxable regular income.</li>
-                    <li><em>TFSA:</em> Treated as 100% tax-free.</li>
-                    <li><em>Non-Registered:</em> Approximated as 25% taxable (assuming half tax-free principal and half capital gains at a 50% inclusion rate).</li>
-                </ul>
-            </li>
-            <li><strong>Tax Brackets:</strong> The model uses an estimated blended Fed/Prov tax profile, applying a tax-free Basic Personal Amount (~$15,500). <em>These brackets are indexed to your inflation rate yearly to prevent artificial "bracket creep."</em></li>
-        </ul>
-
-        <div class="disclaimer-box">
-            <strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice. The calculations rely on simplified assumptions regarding future inflation, market returns, and blended Canadian tax brackets, which may not accurately reflect your specific circumstances or future changes in legislation. Always consult with a certified financial planner, accountant, or qualified professional before making significant financial or retirement decisions.
-        </div>
-        
         <button class="btn-main" onclick="closeModal('assumptionsModal')" style="margin-top:20px; font-size:16px;">I Understand</button>
     </div>
 </div>
@@ -446,8 +409,7 @@
     <div class="modal-content" style="max-width: 700px;">
         <span class="close-modal" onclick="closeModal('budgetModal')">&times;</span>
         <h2>Retirement Budget Estimator</h2>
-        <p>Estimate your anticipated expenses <strong>during retirement</strong> (in today's dollars). The calculator will tally your yearly need.</p>
-
+        <p>Estimate your anticipated expenses <strong>during retirement</strong> (in today's dollars).</p>
         <div class="flex-row">
             <div class="flex-col">
                 <h3>Housing & Utilities (Monthly)</h3>
@@ -462,7 +424,6 @@
                 <label>Healthcare & Insurance:</label> <input type="number" id="b_healthcare" class="b-monthly" value="0">
             </div>
         </div>
-        
         <div class="flex-row" style="margin-top: 10px;">
             <div class="flex-col">
                 <h3>Lifestyle (Monthly)</h3>
@@ -475,7 +436,6 @@
                 <label>Family Support & Charity:</label> <input type="number" id="b_charity" class="b-annual" value="0">
             </div>
         </div>
-
         <div class="budget-total-box">
             <div>
                 <span class="note" style="margin-bottom:0; color:#27ae60;">Your Total Annual Target:</span>
@@ -493,157 +453,78 @@ function setMode(mode) {
     currentMode = mode;
     document.getElementById('modeInd').classList.toggle('active', mode === 'individual');
     document.getElementById('modeCpl').classList.toggle('active', mode === 'couple');
-    
-    // Toggle visibility of Partner 2 sections
     const p2Fields = ['p2_timeline', 'p2_savings', 'p2_benefits', 'p2_pensionRow'];
     p2Fields.forEach(id => document.getElementById(id).classList.toggle('hidden', mode === 'individual'));
-    
-    // Toggle visibility of "Partner 1" labels
-    const p1Labels = document.querySelectorAll('.p1-label');
-    p1Labels.forEach(el => el.style.display = mode === 'couple' ? 'block' : 'none');
+    document.querySelectorAll('.p1-label').forEach(el => el.style.display = mode === 'couple' ? 'block' : 'none');
 }
 
 // Data Persistence (Save/Load)
 function saveData() {
     const data = { currentMode: currentMode };
-    
-    // Grab all inputs and selects across the entire page that have an ID
-    const elements = document.querySelectorAll('input[id], select[id]');
-    elements.forEach(el => {
-        data[el.id] = el.value;
-    });
-    
-    localStorage.setItem('retireh_saved_plan', JSON.stringify(data));
-    
-    // UI Feedback
+    document.querySelectorAll('input[id], select[id]').forEach(el => { data[el.id] = el.value; });
+    localStorage.setItem('retireh_saved_plan_v2', JSON.stringify(data));
     const btn = document.getElementById('saveBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '✅ Saved!';
-    btn.style.color = 'var(--success)';
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.color = 'var(--secondary)';
-    }, 2000);
+    btn.innerHTML = '✅ Saved!'; btn.style.color = 'var(--success)';
+    setTimeout(() => { btn.innerHTML = '💾 Save Plan to Browser'; btn.style.color = 'var(--secondary)'; }, 2000);
 }
 
 function loadData() {
-    const saved = localStorage.getItem('retireh_saved_plan');
-    if(!saved) {
-        alert('No saved plan found in this browser.');
-        return;
-    }
-    
+    const saved = localStorage.getItem('retireh_saved_plan_v2');
+    if(!saved) return alert('No saved plan found in this browser.');
     const data = JSON.parse(saved);
-    
-    // 1. Restore Mode First
-    if (data.currentMode) {
-        setMode(data.currentMode);
-    }
-
-    // 2. Restore Dynamic Events Second
-    if (data.numEvents) {
-        document.getElementById('numEvents').value = data.numEvents;
-        generateEventFields();
-    }
-
-    // 3. Populate everything else
-    const elements = document.querySelectorAll('input[id], select[id]');
-    elements.forEach(el => {
-        if(data[el.id] !== undefined) {
-            el.value = data[el.id];
-        }
-    });
-
-    // 4. Trigger necessary UI updates based on loaded data
-    togglePensionFields('p1');
-    togglePensionFields('p2');
+    if (data.currentMode) setMode(data.currentMode);
+    if (data.numEvents) { document.getElementById('numEvents').value = data.numEvents; generateEventFields(); }
+    document.querySelectorAll('input[id], select[id]').forEach(el => { if(data[el.id] !== undefined) el.value = data[el.id]; });
+    togglePensionFields('p1'); togglePensionFields('p2');
     calculateBudgetTotal();
-    
-    // UI Feedback
     const btn = document.getElementById('loadBtn');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '✅ Loaded!';
-    btn.style.color = 'var(--success)';
-    setTimeout(() => {
-        btn.innerHTML = originalText;
-        btn.style.color = 'var(--secondary)';
-    }, 2000);
+    btn.innerHTML = '✅ Loaded!'; btn.style.color = 'var(--success)';
+    setTimeout(() => { btn.innerHTML = '📂 Load Saved Plan'; btn.style.color = 'var(--secondary)'; }, 2000);
 }
 
-
-// Modal Controllers
-function openModal(modalId) { 
-    document.getElementById(modalId).style.display = 'block'; 
-    if(modalId === 'budgetModal') calculateBudgetTotal();
-}
-function closeModal(modalId) { 
-    document.getElementById(modalId).style.display = 'none'; 
-}
-
+// Modals & UI Events
+function openModal(modalId) { document.getElementById(modalId).style.display = 'block'; if(modalId === 'budgetModal') calculateBudgetTotal(); }
+function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
 window.onclick = function(event) {
     if (event.target == document.getElementById('assumptionsModal')) closeModal('assumptionsModal');
     if (event.target == document.getElementById('budgetModal')) closeModal('budgetModal');
 }
 
-// Pension Toggle
 function togglePensionFields(partnerId) {
     const type = document.getElementById(partnerId + '_pensionType').value;
     document.getElementById(partnerId + '_pensionDetails').classList.toggle('hidden', type === 'none');
+    document.querySelectorAll('#' + partnerId + '_pensionDetails .pssa-only').forEach(el => {
+        el.style.display = type === 'federal' ? 'block' : 'none';
+    });
 }
 
-// Dynamic Events
 function generateEventFields() {
     const numEvents = parseInt(document.getElementById('numEvents').value);
     const container = document.getElementById('dynamicEventsContainer');
     container.innerHTML = '';
-    
     for(let i=1; i<=numEvents; i++) {
         container.innerHTML += `
             <div class="event-box">
                 <h4 style="margin-top:0; margin-bottom:10px; color:var(--primary);">Event ${i}</h4>
                 <div class="flex-row">
-                    <div class="flex-col">
-                        <label>Description:</label>
-                        <input type="text" id="eventName_${i}" value="Event ${i}">
-                    </div>
-                    <div class="flex-col">
-                        <label>Amount ($):</label>
-                        <span class="note">Use negative (-) for expenses.</span>
-                        <input type="number" id="eventAmount_${i}" value="0">
-                    </div>
-                    <div class="flex-col">
-                        <label>Age Occurs (Based on P1):</label>
-                        <input type="number" id="eventAge_${i}" value="65">
-                    </div>
+                    <div class="flex-col"><label>Description:</label><input type="text" id="eventName_${i}" value="Event ${i}"></div>
+                    <div class="flex-col"><label>Amount ($):</label><span class="note">Use negative (-) for expenses.</span><input type="number" id="eventAmount_${i}" value="0"></div>
+                    <div class="flex-col"><label>Age Occurs (Based on P1):</label><input type="number" id="eventAge_${i}" value="65"></div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 }
 
 // Budget Estimator Logic
 function calculateBudgetTotal() {
     let total = 0;
-    document.querySelectorAll('.b-monthly').forEach(input => {
-        total += (parseFloat(input.value) || 0) * 12;
-    });
-    document.querySelectorAll('.b-annual').forEach(input => {
-        total += (parseFloat(input.value) || 0);
-    });
+    document.querySelectorAll('.b-monthly').forEach(input => { total += (parseFloat(input.value) || 0) * 12; });
+    document.querySelectorAll('.b-annual').forEach(input => { total += (parseFloat(input.value) || 0); });
     document.getElementById('budgetTotalDisplay').innerText = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(total);
     return total;
 }
-
-function applyBudget() {
-    const total = calculateBudgetTotal();
-    document.getElementById('desiredIncome').value = total;
-    closeModal('budgetModal');
-}
-
-document.querySelectorAll('.b-monthly, .b-annual').forEach(input => {
-    input.addEventListener('input', calculateBudgetTotal);
-});
-
+function applyBudget() { document.getElementById('desiredIncome').value = calculateBudgetTotal(); closeModal('budgetModal'); }
+document.querySelectorAll('.b-monthly, .b-annual').forEach(input => { input.addEventListener('input', calculateBudgetTotal); });
 
 // Core Simulation Engine
 let chartInstance = null;
@@ -651,20 +532,9 @@ let currentChartMode = 'income';
 let simData = {}; 
 
 function estimateTaxes(income1, income2, inf, yrs) {
-    const f = Math.pow(1 + inf, yrs);
-    let tax = 0;
-    let bpa = 15500 * f;
-    
-    // Tax for person 1
-    let t1 = Math.max(0, income1 - bpa);
-    if(t1 > 0) tax += Math.min(t1, 50000 * f) * 0.22; 
-    if(t1 > 50000 * f) tax += (t1 - 50000 * f) * 0.38;
-    
-    // Tax for person 2
-    let t2 = Math.max(0, income2 - bpa);
-    if(t2 > 0) tax += Math.min(t2, 50000 * f) * 0.22; 
-    if(t2 > 50000 * f) tax += (t2 - 50000 * f) * 0.38;
-
+    const f = Math.pow(1 + inf, yrs); let tax = 0; let bpa = 15500 * f;
+    let t1 = Math.max(0, income1 - bpa); if(t1 > 0) tax += Math.min(t1, 50000 * f) * 0.22; if(t1 > 50000 * f) tax += (t1 - 50000 * f) * 0.38;
+    let t2 = Math.max(0, income2 - bpa); if(t2 > 0) tax += Math.min(t2, 50000 * f) * 0.22; if(t2 > 50000 * f) tax += (t2 - 50000 * f) * 0.38;
     return tax;
 }
 
@@ -677,11 +547,8 @@ function switchChart(mode) {
 
 const currencyTooltipCallback = {
     label: function(context) {
-        let label = context.dataset.label || '';
-        if (label) label += ': ';
-        if (context.parsed.y !== null) {
-            label += new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(context.parsed.y);
-        }
+        let label = context.dataset.label || ''; if (label) label += ': ';
+        if (context.parsed.y !== null) label += new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(context.parsed.y);
         return label;
     }
 };
@@ -689,29 +556,21 @@ const currencyTooltipCallback = {
 function renderChart() {
     if(chartInstance) chartInstance.destroy();
     const ctx = document.getElementById('mainChart').getContext('2d');
-    
     if (currentChartMode === 'income') {
         chartInstance = new Chart(ctx, {
             type: 'bar',
             data: { labels: simData.labels, datasets: [
                 { type: 'line', label: 'Goal Net', data: simData.targetLine, borderColor: '#2ecc71', borderWidth: 3, pointRadius:0 },
+                { label: 'Working Salary (Net)', data: simData.salaryData, backgroundColor: '#34495e', stack: 'a' },
                 { label: 'CPP + OAS', data: simData.cppOasData, backgroundColor: '#f1c40f', stack: 'a' },
-                { label: 'Employer Pension', data: simData.penData, backgroundColor: '#e67e22', stack: 'a' },
+                { label: 'Pension (Lifetime)', data: simData.penData, backgroundColor: '#e67e22', stack: 'a' },
+                { label: 'Pension (Bridge)', data: simData.bridgeData, backgroundColor: '#f39c12', stack: 'a' },
                 { label: 'Annuity Income', data: simData.annData, backgroundColor: '#e74c3c', stack: 'a' },
                 { label: 'Withdraw Non-Reg', data: simData.nrD, backgroundColor: '#3498db', stack: 'a' },
                 { label: 'Withdraw RRSP', data: simData.rD, backgroundColor: '#9b59b6', stack: 'a' },
                 { label: 'Withdraw TFSA', data: simData.tD, backgroundColor: '#1abc9c', stack: 'a' }
             ]},
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                interaction: { mode: 'index', intersect: false },
-                scales: { x: { stacked: true }, y: { stacked: true } }, 
-                plugins: { 
-                    legend: { position: 'bottom' },
-                    tooltip: { callbacks: currencyTooltipCallback }
-                } 
-            }
+            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: currencyTooltipCallback } } }
         });
     } else {
         chartInstance = new Chart(ctx, {
@@ -721,62 +580,14 @@ function renderChart() {
                 { label: 'Total RRSP', data: simData.rrspHist, backgroundColor: 'rgba(155, 89, 182, 0.7)', borderColor: '#8e44ad', borderWidth: 2, fill: true, stack: 'Stack 0', pointRadius:0 },
                 { label: 'Total TFSA', data: simData.tfsaHist, backgroundColor: 'rgba(26, 188, 156, 0.7)', borderColor: '#16a085', borderWidth: 2, fill: true, stack: 'Stack 0', pointRadius:0 }
             ]},
-            options: { 
-                responsive: true, 
-                maintainAspectRatio: false, 
-                interaction: { mode: 'index', intersect: false },
-                scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, 
-                plugins: { 
-                    legend: { position: 'bottom' },
-                    tooltip: { callbacks: currencyTooltipCallback }
-                } 
-            }
+            options: { responsive: true, maintainAspectRatio: false, interaction: { mode: 'index', intersect: false }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }, plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: currencyTooltipCallback } } }
         });
     }
 }
 
-function runRetirementSimulation() {
+// Data Extraction Engine
+function getInputsFromDOM() {
     const isCouple = (currentMode === 'couple');
-
-    // Extract Partner 1
-    const p1 = {
-        curAge: parseInt(document.getElementById('p1_currentAge').value),
-        retAge: parseInt(document.getElementById('p1_retirementAge').value),
-        lifeExp: parseInt(document.getElementById('p1_lifeExpectancy').value),
-        rrsp: parseFloat(document.getElementById('p1_rrsp').value) || 0,
-        tfsa: parseFloat(document.getElementById('p1_tfsa').value) || 0,
-        nonReg: parseFloat(document.getElementById('p1_nonReg').value) || 0,
-        rrspC: parseFloat(document.getElementById('p1_rrspContrib').value) || 0,
-        tfsaC: parseFloat(document.getElementById('p1_tfsaContrib').value) || 0,
-        nonRegC: parseFloat(document.getElementById('p1_nonRegContrib').value) || 0,
-        cppAge: parseInt(document.getElementById('p1_cppAge').value) || 65,
-        oasAge: parseInt(document.getElementById('p1_oasAge').value) || 65,
-        penType: document.getElementById('p1_pensionType').value,
-        penStart: parseInt(document.getElementById('p1_penStart').value) || 65,
-        penYrs: parseFloat(document.getElementById('p1_penYrs').value) || 0,
-        penSal: parseFloat(document.getElementById('p1_penSal').value) || 0
-    };
-
-    // Extract Partner 2 (Or Zero out if Individual)
-    const p2 = {
-        curAge: isCouple ? parseInt(document.getElementById('p2_currentAge').value) : p1.curAge,
-        retAge: isCouple ? parseInt(document.getElementById('p2_retirementAge').value) : p1.retAge,
-        lifeExp: isCouple ? parseInt(document.getElementById('p2_lifeExpectancy').value) : p1.lifeExp,
-        rrsp: isCouple ? parseFloat(document.getElementById('p2_rrsp').value) || 0 : 0,
-        tfsa: isCouple ? parseFloat(document.getElementById('p2_tfsa').value) || 0 : 0,
-        nonReg: isCouple ? parseFloat(document.getElementById('p2_nonReg').value) || 0 : 0,
-        rrspC: isCouple ? parseFloat(document.getElementById('p2_rrspContrib').value) || 0 : 0,
-        tfsaC: isCouple ? parseFloat(document.getElementById('p2_tfsaContrib').value) || 0 : 0,
-        nonRegC: isCouple ? parseFloat(document.getElementById('p2_nonRegContrib').value) || 0 : 0,
-        cppAge: isCouple ? parseInt(document.getElementById('p2_cppAge').value) || 65 : 65,
-        oasAge: isCouple ? parseInt(document.getElementById('p2_oasAge').value) || 65 : 65,
-        penType: isCouple ? document.getElementById('p2_pensionType').value : 'none',
-        penStart: isCouple ? parseInt(document.getElementById('p2_penStart').value) || 65 : 65,
-        penYrs: isCouple ? parseFloat(document.getElementById('p2_penYrs').value) || 0 : 0,
-        penSal: isCouple ? parseFloat(document.getElementById('p2_penSal').value) || 0 : 0
-    };
-
-    // Events Array (Tied to P1's age timeline for simplicity)
     const numEvents = parseInt(document.getElementById('numEvents').value) || 0;
     const events = [];
     for(let i=1; i<=numEvents; i++) {
@@ -786,47 +597,106 @@ function runRetirementSimulation() {
             age: parseInt(document.getElementById(`eventAge_${i}`).value) || 0
         });
     }
+    
+    const p1 = {
+        curAge: parseInt(document.getElementById('p1_currentAge').value),
+        retAge: parseInt(document.getElementById('p1_retirementAge').value),
+        lifeExp: parseInt(document.getElementById('p1_lifeExpectancy').value),
+        netSal: parseFloat(document.getElementById('p1_netSalary').value) || 0,
+        rrsp: parseFloat(document.getElementById('p1_rrsp').value) || 0,
+        tfsa: parseFloat(document.getElementById('p1_tfsa').value) || 0,
+        nonReg: parseFloat(document.getElementById('p1_nonReg').value) || 0,
+        rrspC: parseFloat(document.getElementById('p1_rrspContrib').value) || 0,
+        tfsaC: parseFloat(document.getElementById('p1_tfsaContrib').value) || 0,
+        nonRegC: parseFloat(document.getElementById('p1_nonRegContrib').value) || 0,
+        cppAge: parseInt(document.getElementById('p1_cppAge').value) || 65,
+        oasAge: parseInt(document.getElementById('p1_oasAge').value) || 65,
+        penType: document.getElementById('p1_pensionType').value,
+        pssaGroup: document.getElementById('p1_pssaGroup').value,
+        penStart: parseInt(document.getElementById('p1_penStart').value) || 65,
+        penYrs: parseFloat(document.getElementById('p1_penYrs').value) || 0,
+        penSal: parseFloat(document.getElementById('p1_penSal').value) || 0
+    };
 
-    // Annuity
-    const annCost = parseFloat(document.getElementById('annuityPurchase').value) || 0;
-    const annAge = parseInt(document.getElementById('annuityAge').value) || 65;
-    const annSource = document.getElementById('annuitySource').value;
-    const annPayoutBase = parseFloat(document.getElementById('annuityPayout').value) || 0;
-    const annIndexed = document.getElementById('annuityIndexed').value === 'yes';
+    const p2 = {
+        curAge: isCouple ? parseInt(document.getElementById('p2_currentAge').value) : p1.curAge,
+        retAge: isCouple ? parseInt(document.getElementById('p2_retirementAge').value) : p1.retAge,
+        lifeExp: isCouple ? parseInt(document.getElementById('p2_lifeExpectancy').value) : p1.lifeExp,
+        netSal: isCouple ? parseFloat(document.getElementById('p2_netSalary').value) || 0 : 0,
+        rrsp: isCouple ? parseFloat(document.getElementById('p2_rrsp').value) || 0 : 0,
+        tfsa: isCouple ? parseFloat(document.getElementById('p2_tfsa').value) || 0 : 0,
+        nonReg: isCouple ? parseFloat(document.getElementById('p2_nonReg').value) || 0 : 0,
+        rrspC: isCouple ? parseFloat(document.getElementById('p2_rrspContrib').value) || 0 : 0,
+        tfsaC: isCouple ? parseFloat(document.getElementById('p2_tfsaContrib').value) || 0 : 0,
+        nonRegC: isCouple ? parseFloat(document.getElementById('p2_nonRegContrib').value) || 0 : 0,
+        cppAge: isCouple ? parseInt(document.getElementById('p2_cppAge').value) || 65 : 65,
+        oasAge: isCouple ? parseInt(document.getElementById('p2_oasAge').value) || 65 : 65,
+        penType: isCouple ? document.getElementById('p2_pensionType').value : 'none',
+        pssaGroup: isCouple ? document.getElementById('p2_pssaGroup').value : '1',
+        penStart: isCouple ? parseInt(document.getElementById('p2_penStart').value) || 65 : 65,
+        penYrs: isCouple ? parseFloat(document.getElementById('p2_penYrs').value) || 0 : 0,
+        penSal: isCouple ? parseFloat(document.getElementById('p2_penSal').value) || 0 : 0
+    };
+    
+    return {
+        isCouple, events, p1, p2,
+        annCost: parseFloat(document.getElementById('annuityPurchase').value) || 0,
+        annAge: parseInt(document.getElementById('annuityAge').value) || 65,
+        annSource: document.getElementById('annuitySource').value,
+        annPayoutBase: parseFloat(document.getElementById('annuityPayout').value) || 0,
+        annIndexed: document.getElementById('annuityIndexed').value === 'yes',
+        inf: parseFloat(document.getElementById('inflationRate').value) / 100,
+        returnPre: parseFloat(document.getElementById('returnPre').value) / 100,
+        returnPost: parseFloat(document.getElementById('returnPost').value) / 100,
+        goal: parseFloat(document.getElementById('desiredIncome').value),
+        legacyPercent: parseFloat(document.getElementById('legacyPercent').value) || 0
+    };
+}
 
-    // Econ & Goals
-    const inf = parseFloat(document.getElementById('inflationRate').value) / 100;
-    const returnPre = parseFloat(document.getElementById('returnPre').value) / 100;
-    const returnPost = parseFloat(document.getElementById('returnPost').value) / 100;
-    const goal = parseFloat(document.getElementById('desiredIncome').value);
-    const legacyPercent = parseFloat(document.getElementById('legacyPercent').value) || 0;
+function calculatePSSA(p, simAge, inf, curAge) {
+    if (p.penType !== 'federal' || simAge < p.penStart || simAge > p.lifeExp) return { lifetime: 0, bridge: 0 };
+    
+    let unreducedAge = p.pssaGroup === "1" ? 60 : 65;
+    let penaltyFreeEarly = p.pssaGroup === "1" ? 55 : 60;
+    let mult = 1.0;
+    
+    if (p.penStart < unreducedAge && !(p.penStart >= penaltyFreeEarly && p.penYrs >= 30)) {
+        let yearsEarly = unreducedAge - p.penStart;
+        if (p.penStart >= penaltyFreeEarly) { yearsEarly = Math.min(yearsEarly, Math.max(0, 30 - p.penYrs)); }
+        mult = Math.max(0, 1.0 - (yearsEarly * 0.05));
+    }
+    
+    let baseLifetime = (0.01375 * p.penYrs * p.penSal) * mult;
+    let baseBridge = (0.00625 * p.penYrs * Math.min(p.penSal, 68000)) * mult; 
+    
+    let lifetime = baseLifetime * Math.pow(1+inf, simAge - curAge);
+    let bridge = (simAge < 65) ? baseBridge * Math.pow(1+inf, simAge - curAge) : 0;
+    
+    return { lifetime, bridge };
+}
 
-    // Timeline Setup
-    const earliestRetAge = Math.min(p1.retAge, p2.retAge);
-    const simStartAge = p1.curAge; // Clock runs on P1's age
-    const maxLifeExp = isCouple ? Math.max(p1.lifeExp, p2.lifeExp + (p1.curAge - p2.curAge)) : p1.lifeExp;
+// Headless Math Engine (Runs Simulation without touching UI)
+function runSimulationEngine(inp, generateCharts) {
+    const earliestRetAge = Math.min(inp.p1.retAge, inp.p2.retAge);
+    const simStartAge = inp.p1.curAge; 
+    const maxLifeExp = inp.isCouple ? Math.max(inp.p1.lifeExp, inp.p2.lifeExp + (inp.p1.curAge - inp.p2.curAge)) : inp.p1.lifeExp;
 
-    let totRRSP = p1.rrsp + p2.rrsp;
-    let totTFSA = p1.tfsa + p2.tfsa;
-    let totNonReg = p1.nonReg + p2.nonReg;
+    let totRRSP = inp.p1.rrsp + inp.p2.rrsp;
+    let totTFSA = inp.p1.tfsa + inp.p2.tfsa;
+    let totNonReg = inp.p1.nonReg + inp.p2.nonReg;
 
-    // Accumulation logic to Earliest Retirement
-    const yrsToRet = earliestRetAge - p1.curAge;
+    const yrsToRet = earliestRetAge - inp.p1.curAge;
     for(let i=0; i<yrsToRet*12; i++){
         if (i % 12 === 0) {
-            let currentYearAge = p1.curAge + Math.floor(i/12);
-            events.forEach(ev => { if(ev.amount !== 0 && currentYearAge === ev.age) totNonReg += ev.amount; });
+            let currentYearAge = inp.p1.curAge + Math.floor(i/12);
+            inp.events.forEach(ev => { if(ev.amount !== 0 && currentYearAge === ev.age) totNonReg += ev.amount; });
         }
-        totRRSP += p1.rrspC + p2.rrspC; 
-        totTFSA += p1.tfsaC + p2.tfsaC; 
-        totNonReg += p1.nonRegC + p2.nonRegC;
-        totRRSP *= (1+returnPre/12); totTFSA *= (1+returnPre/12); totNonReg *= (1+returnPre/12);
+        totRRSP += inp.p1.rrspC + inp.p2.rrspC; totTFSA += inp.p1.tfsaC + inp.p2.tfsaC; totNonReg += inp.p1.nonRegC + inp.p2.nonRegC;
+        totRRSP *= (1+inp.returnPre/12); totTFSA *= (1+inp.returnPre/12); totNonReg *= (1+inp.returnPre/12);
     }
 
     let totalSavedAtRetirement = totRRSP + totTFSA + totNonReg;
-    let formattedSavings = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(totalSavedAtRetirement);
 
-    // Deduction Helper (Household level)
     const applyDeduction = (amount, preferred) => {
         let rem = amount;
         if (preferred === 'rrsp') { let t = Math.min(totRRSP, rem); totRRSP-=t; rem-=t; t = Math.min(totNonReg, rem); totNonReg-=t; rem-=t; totTFSA-=rem; }
@@ -834,71 +704,73 @@ function runRetirementSimulation() {
         else { let t = Math.min(totNonReg, rem); totNonReg-=t; rem-=t; t = Math.min(totTFSA, rem); totTFSA-=t; rem-=t; totRRSP-=rem; }
     };
 
-    // Calculate CPP Multipliers
     const calcCPP = (age) => 11500 * (age < 65 ? 1.0 - ((65 - age) * 0.072) : 1.0 + ((age - 65) * 0.084));
     const calcOAS = (age) => 9100 * (age > 65 ? 1.0 + ((age - 65) * 0.072) : 1.0);
     
-    let p1_CPP = calcCPP(p1.cppAge); let p1_OAS = calcOAS(p1.oasAge);
-    let p2_CPP = isCouple ? calcCPP(p2.cppAge) : 0; let p2_OAS = isCouple ? calcOAS(p2.oasAge) : 0;
+    let p1_CPP = calcCPP(inp.p1.cppAge); let p1_OAS = calcOAS(inp.p1.oasAge);
+    let p2_CPP = inp.isCouple ? calcCPP(inp.p2.cppAge) : 0; let p2_OAS = inp.isCouple ? calcOAS(inp.p2.oasAge) : 0;
 
-    let targetNet = goal * Math.pow(1+inf, yrsToRet);
+    let targetNet = inp.goal * Math.pow(1+inp.inf, yrsToRet);
     let simAge = earliestRetAge;
     let ranOutAge = null;
     let experiencedClawback = false;
     const oasThresholdBase = 95000;
 
-    simData = { labels: [], cppOasData: [], penData: [], annData: [], nrD: [], rD: [], tD: [], targetLine: [], rrspHist: [], tfsaHist: [], nonRegHist: [] };
+    if(generateCharts) simData = { labels: [], cppOasData: [], penData: [], bridgeData: [], annData: [], nrD: [], rD: [], tD: [], salaryData: [], targetLine: [], rrspHist: [], tfsaHist: [], nonRegHist: [] };
 
     while(simAge <= maxLifeExp){
-        simData.labels.push(`Age ${simAge}`);
-        simData.targetLine.push(targetNet);
+        if(generateCharts){
+            simData.labels.push(`Age ${simAge}`); simData.targetLine.push(targetNet);
+            simData.rrspHist.push(Math.max(0, totRRSP)); simData.tfsaHist.push(Math.max(0, totTFSA)); simData.nonRegHist.push(Math.max(0, totNonReg));
+        }
         
-        events.forEach(ev => { if(ev.amount !== 0 && simAge === ev.age && simAge >= earliestRetAge) totNonReg += ev.amount; });
-        if (annCost > 0 && simAge === annAge && simAge >= earliestRetAge) applyDeduction(annCost, annSource);
+        inp.events.forEach(ev => { if(ev.amount !== 0 && simAge === ev.age && simAge >= earliestRetAge) totNonReg += ev.amount; });
+        if (inp.annCost > 0 && simAge === inp.annAge && simAge >= earliestRetAge) applyDeduction(inp.annCost, inp.annSource);
         
-        simData.rrspHist.push(Math.max(0, totRRSP));
-        simData.tfsaHist.push(Math.max(0, totTFSA));
-        simData.nonRegHist.push(Math.max(0, totNonReg));
-        
-        // P1 Age is simAge. Calculate P2 Age.
-        let p2Age = simAge - (p1.curAge - p2.curAge);
+        let p2Age = simAge - (inp.p1.curAge - inp.p2.curAge);
+        let p1Working = simAge < inp.p1.retAge;
+        let p2Working = inp.isCouple && (p2Age < inp.p2.retAge);
 
-        let p1PenInc = 0, p2PenInc = 0;
-        if(p1.penType !== 'none' && simAge >= p1.penStart && simAge <= p1.lifeExp) p1PenInc = (0.02 * p1.penYrs * p1.penSal) * Math.pow(1+inf, simAge - p1.curAge);
-        if(isCouple && p2.penType !== 'none' && p2Age >= p2.penStart && p2Age <= p2.lifeExp) p2PenInc = (0.02 * p2.penYrs * p2.penSal) * Math.pow(1+inf, p2Age - p2.curAge);
+        let activeNetSalary = 0;
+        if(p1Working) activeNetSalary += inp.p1.netSal * Math.pow(1+inp.inf, simAge - inp.p1.curAge);
+        if(p2Working) activeNetSalary += inp.p2.netSal * Math.pow(1+inp.inf, p2Age - inp.p2.curAge);
 
-        let cInc = 0;
-        let p1OasRcvd = 0, p2OasRcvd = 0;
+        let p1Pen = calculatePSSA(inp.p1, simAge, inp.inf, inp.p1.curAge);
+        let p2Pen = inp.isCouple ? calculatePSSA(inp.p2, p2Age, inp.inf, inp.p2.curAge) : {lifetime: 0, bridge: 0};
         
-        if (simAge >= p1.cppAge && simAge <= p1.lifeExp) cInc += p1_CPP * Math.pow(1+inf, simAge - p1.curAge);
-        if (simAge >= p1.oasAge && simAge <= p1.lifeExp) { p1OasRcvd = p1_OAS * Math.pow(1+inf, simAge - p1.curAge); cInc += p1OasRcvd; }
-        
-        if (isCouple) {
-            if (p2Age >= p2.cppAge && p2Age <= p2.lifeExp) cInc += p2_CPP * Math.pow(1+inf, p2Age - p2.curAge);
-            if (p2Age >= p2.oasAge && p2Age <= p2.lifeExp) { p2OasRcvd = p2_OAS * Math.pow(1+inf, p2Age - p2.curAge); cInc += p2OasRcvd; }
+        // Simple Provincial Fallback (2% x Yrs x Sal) if not Federal
+        if (inp.p1.penType === 'provincial' && simAge >= inp.p1.penStart && simAge <= inp.p1.lifeExp) p1Pen.lifetime = (0.02 * inp.p1.penYrs * inp.p1.penSal) * Math.pow(1+inp.inf, simAge - inp.p1.curAge);
+        if (inp.isCouple && inp.p2.penType === 'provincial' && p2Age >= inp.p2.penStart && p2Age <= inp.p2.lifeExp) p2Pen.lifetime = (0.02 * inp.p2.penYrs * inp.p2.penSal) * Math.pow(1+inp.inf, p2Age - inp.p2.curAge);
+
+        let cInc = 0, p1OasRcvd = 0, p2OasRcvd = 0;
+        if (simAge >= inp.p1.cppAge && simAge <= inp.p1.lifeExp) cInc += p1_CPP * Math.pow(1+inp.inf, simAge - inp.p1.curAge);
+        if (simAge >= inp.p1.oasAge && simAge <= inp.p1.lifeExp) { p1OasRcvd = p1_OAS * Math.pow(1+inp.inf, simAge - inp.p1.curAge); cInc += p1OasRcvd; }
+        if (inp.isCouple) {
+            if (p2Age >= inp.p2.cppAge && p2Age <= inp.p2.lifeExp) cInc += p2_CPP * Math.pow(1+inp.inf, p2Age - inp.p2.curAge);
+            if (p2Age >= inp.p2.oasAge && p2Age <= inp.p2.lifeExp) { p2OasRcvd = p2_OAS * Math.pow(1+inp.inf, p2Age - inp.p2.curAge); cInc += p2OasRcvd; }
         }
         
         let currentAnnPayout = 0;
-        if (simAge >= annAge && annPayoutBase > 0 && simAge <= p1.lifeExp) { // Annuity tied to P1 life for simplicity
-            currentAnnPayout = annIndexed ? annPayoutBase * Math.pow(1+inf, simAge - annAge) : annPayoutBase;
-        }
+        if (simAge >= inp.annAge && inp.annPayoutBase > 0 && simAge <= inp.p1.lifeExp) currentAnnPayout = inp.annIndexed ? inp.annPayoutBase * Math.pow(1+inp.inf, simAge - inp.annAge) : inp.annPayoutBase;
         
-        simData.penData.push(p1PenInc + p2PenInc); 
-        simData.cppOasData.push(cInc);
-        simData.annData.push(currentAnnPayout);
+        if(generateCharts) { 
+            simData.penData.push(p1Pen.lifetime + p2Pen.lifetime); 
+            simData.bridgeData.push(p1Pen.bridge + p2Pen.bridge);
+            simData.cppOasData.push(cInc); 
+            simData.annData.push(currentAnnPayout); 
+            simData.salaryData.push(activeNetSalary); 
+        }
 
         let dNR=0, dR=0, dT=0;
-        let taxableRunning1 = p1PenInc + (simAge >= p1.cppAge && simAge <= p1.lifeExp ? p1_CPP * Math.pow(1+inf, simAge - p1.curAge) : 0) + p1OasRcvd + currentAnnPayout;
-        let taxableRunning2 = isCouple ? p2PenInc + (p2Age >= p2.cppAge && p2Age <= p2.lifeExp ? p2_CPP * Math.pow(1+inf, p2Age - p2.curAge) : 0) + p2OasRcvd : 0;
-        
-        let currentOasThreshold = oasThresholdBase * Math.pow(1+inf, simAge - simStartAge);
-        
-        // Income splitting approximation for withdrawals
+        let taxableRunning1 = p1Pen.lifetime + p1Pen.bridge + (simAge >= inp.p1.cppAge && simAge <= inp.p1.lifeExp ? p1_CPP * Math.pow(1+inp.inf, simAge - inp.p1.curAge) : 0) + p1OasRcvd + currentAnnPayout;
+        let taxableRunning2 = inp.isCouple ? p2Pen.lifetime + p2Pen.bridge + (p2Age >= inp.p2.cppAge && p2Age <= inp.p2.lifeExp ? p2_CPP * Math.pow(1+inp.inf, p2Age - inp.p2.curAge) : 0) + p2OasRcvd : 0;
+        let currentOasThreshold = oasThresholdBase * Math.pow(1+inp.inf, simAge - simStartAge);
         let getClawback = (inc, rcvd) => inc > currentOasThreshold && rcvd > 0 ? Math.min((inc - currentOasThreshold) * 0.15, rcvd) : 0;
         
-        let net = (p1PenInc + p2PenInc + cInc + currentAnnPayout) - estimateTaxes(taxableRunning1, taxableRunning2, inf, simAge - simStartAge) - getClawback(taxableRunning1, p1OasRcvd) - getClawback(taxableRunning2, p2OasRcvd);
+        let guaranteedNet = activeNetSalary + (p1Pen.lifetime + p1Pen.bridge + p2Pen.lifetime + p2Pen.bridge + cInc + currentAnnPayout) - estimateTaxes(taxableRunning1, taxableRunning2, inp.inf, simAge - simStartAge) - getClawback(taxableRunning1, p1OasRcvd) - getClawback(taxableRunning2, p2OasRcvd);
         
-        // Drawdown Loop
+        let net = guaranteedNet;
+        
         while(net < (targetNet - 10)){
             let chunk = 250;
             if(totNonReg >= chunk){ totNonReg -= chunk; dNR += chunk; taxableRunning1 += chunk*0.125; taxableRunning2 += chunk*0.125; }
@@ -906,78 +778,137 @@ function runRetirementSimulation() {
             else if(totTFSA >= chunk){ totTFSA -= chunk; dT += chunk; }
             else break;
             
-            let cb1 = getClawback(taxableRunning1, p1OasRcvd);
-            let cb2 = getClawback(taxableRunning2, p2OasRcvd);
+            let cb1 = getClawback(taxableRunning1, p1OasRcvd); let cb2 = getClawback(taxableRunning2, p2OasRcvd);
             if (cb1 > 0 || cb2 > 0) experiencedClawback = true;
-            
-            net = (p1PenInc + p2PenInc + cInc + currentAnnPayout + dNR + dR + dT) - estimateTaxes(taxableRunning1, taxableRunning2, inf, simAge - simStartAge) - cb1 - cb2;
+            net = activeNetSalary + (p1Pen.lifetime + p1Pen.bridge + p2Pen.lifetime + p2Pen.bridge + cInc + currentAnnPayout + dNR + dR + dT) - estimateTaxes(taxableRunning1, taxableRunning2, inp.inf, simAge - simStartAge) - cb1 - cb2;
         }
 
         if(net < (targetNet - 500) && ranOutAge === null) ranOutAge = simAge;
+        if(generateCharts) { simData.nrD.push(dNR); simData.rD.push(dR); simData.tD.push(dT); }
 
-        simData.nrD.push(dNR); simData.rD.push(dR); simData.tD.push(dT);
-        totRRSP *= (1+returnPost); totTFSA *= (1+returnPost); totNonReg *= (1+returnPost);
-        targetNet *= (1+inf);
+        if(p1Working) { totRRSP += inp.p1.rrspC * 12; totTFSA += inp.p1.tfsaC * 12; totNonReg += inp.p1.nonRegC * 12; }
+        if(p2Working) { totRRSP += inp.p2.rrspC * 12; totTFSA += inp.p2.tfsaC * 12; totNonReg += inp.p2.nonRegC * 12; }
+
+        totRRSP *= (1+inp.returnPost); totTFSA *= (1+inp.returnPost); totNonReg *= (1+inp.returnPost); targetNet *= (1+inp.inf);
         simAge++;
     }
     
     let finalAssets = Math.max(0, totRRSP + totTFSA + totNonReg);
-    let legacyTargetNominal = totalSavedAtRetirement * (legacyPercent / 100) * Math.pow(1+inf, maxLifeExp - earliestRetAge);
-    
-    let formattedFinalEstate = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(finalAssets);
+    let legacyTargetNominal = totalSavedAtRetirement * (inp.legacyPercent / 100) * Math.pow(1+inp.inf, maxLifeExp - earliestRetAge);
 
+    return { finalAssets, ranOutAge, experiencedClawback, totalSavedAtRetirement, legacyTargetNominal, isCouple: inp.isCouple, maxLifeExp };
+}
+
+// Master UI Update logic
+function renderResultsUI(res, inp) {
+    let formattedFinalEstate = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(res.finalAssets);
+    let formattedSavings = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD', maximumFractionDigits: 0 }).format(res.totalSavedAtRetirement);
+    
     document.getElementById('resultsArea').style.display = 'block';
     document.getElementById('chartToggle').style.display = 'block';
     const tr = document.getElementById('textResults');
     tr.className = '';
     
-    let modeText = isCouple ? `<strong>Household Projection:</strong> Simulated joint assets and income splitting.` : `<strong>Individual Projection.</strong>`;
-    
-    let annuitySummaryText = "";
-    if (annCost > 0 || annPayoutBase > 0) {
-        annuitySummaryText = `<li><strong>Annuity Purchase:</strong> You utilized $${annCost.toLocaleString()} to purchase an annuity at age ${annAge}, providing a guaranteed $${annPayoutBase.toLocaleString()}/yr (${annIndexed ? 'growing with inflation' : 'flat payout'}).</li>`;
-    }
-
-    let clawbackWarning = experiencedClawback 
-        ? `<li style="color: var(--danger);"><strong>OAS Clawback Triggered:</strong> Household taxable income exceeded maximum thresholds. The engine automatically paid the recovery tax.</li>` : "";
-        
-    let estateHtml = `<li><strong>Projected Remaining Assets:</strong> ${formattedFinalEstate} ${legacyPercent > 0 ? `<em>(Target: ${legacyPercent}%)</em>` : ''}</li>`;
+    let modeText = res.isCouple ? `<strong>Household Projection:</strong> Simulated joint assets and income splitting.` : `<strong>Individual Projection.</strong>`;
+    let annuitySummaryText = (inp.annCost > 0 || inp.annPayoutBase > 0) ? `<li><strong>Annuity Purchase:</strong> You utilized $${inp.annCost.toLocaleString()} to purchase an annuity at age ${inp.annAge}, providing a guaranteed $${inp.annPayoutBase.toLocaleString()}/yr (${inp.annIndexed ? 'growing with inflation' : 'flat payout'}).</li>` : "";
+    let clawbackWarning = res.experiencedClawback ? `<li style="color: var(--danger);"><strong>OAS Clawback Triggered:</strong> Household taxable income exceeded maximum thresholds. The engine automatically paid the recovery tax.</li>` : "";
+    let estateHtml = `<li><strong>Projected Remaining Assets at End Age:</strong> ${formattedFinalEstate} ${inp.legacyPercent > 0 ? `<em>(Target: ${inp.legacyPercent}%)</em>` : ''}</li>`;
 
     const summaryHtml = `
         <ul class="summary-list">
             <li>${modeText}</li>
-            <li><strong>Total Savings at Retirement:</strong> ${formattedSavings}</li>
+            <li><strong>Total Savings at First Retirement:</strong> ${formattedSavings}</li>
             ${annuitySummaryText}
             ${clawbackWarning}
             ${estateHtml}
         </ul>
     `;
     
-    if(ranOutAge === null){
-        if (legacyPercent > 0 && finalAssets < legacyTargetNominal) {
+    if(res.ranOutAge === null){
+        if (inp.legacyPercent > 0 && res.finalAssets < res.legacyTargetNominal) {
             tr.classList.add('warning');
-            tr.innerHTML = `<span class="highlight">⚠️ Income Secure, but Estate Goal Missed</span>
-                <p>Your income sources are projected to last, but your remaining assets fall short of your ${legacyPercent}% estate target.</p>
-                ${summaryHtml}`;
+            tr.innerHTML = `<span class="highlight">⚠️ Income Secure, but Estate Goal Missed</span><p>Your income sources are projected to last, but your remaining assets fall short of your ${inp.legacyPercent}% estate target.</p>${summaryHtml}`;
         } else {
             tr.classList.add('success');
-            tr.innerHTML = `<span class="highlight">🎉 Financial Plan: Secure</span>
-                <p>Your combined income sources are projected to successfully meet your after-tax goal throughout retirement.</p>
-                ${summaryHtml}`;
+            tr.innerHTML = `<span class="highlight">🎉 Financial Plan: Secure</span><p>Your combined income sources are projected to successfully meet your after-tax goal throughout retirement.</p>${summaryHtml}`;
         }
     } else {
         tr.classList.add('warning');
-        tr.innerHTML = `<span class="highlight">⚠️ Income Gap Predicted</span>
-            <p>Your total income is projected to fall below your target starting at age <strong>${ranOutAge}</strong>.</p>
-            ${summaryHtml}`;
+        tr.innerHTML = `<span class="highlight">⚠️ Income Gap Predicted</span><p>Your total income is projected to fall below your target starting at age <strong>${res.ranOutAge}</strong>.</p>${summaryHtml}`;
     }
-
     renderChart();
+}
+
+function runRetirementSimulation() {
+    const inputs = getInputsFromDOM();
+    const results = runSimulationEngine(inputs, true);
+    renderResultsUI(results, inputs);
+}
+
+// Start Age Optimizer
+function optimizeBenefits() {
+    const btn = document.getElementById('btnOptimize');
+    btn.innerHTML = '⏳ Optimizing...';
+    
+    setTimeout(() => {
+        let bestCombo = null;
+        let maxScore = -Infinity;
+        let inputs = getInputsFromDOM();
+        
+        const cppRange = [60,61,62,63,64,65,66,67,68,69,70];
+        const oasRange = [65,66,67,68,69,70];
+        const getValidRange = (range, curAge) => range.filter(a => a >= curAge);
+        
+        const p1_cppRange = getValidRange(cppRange, inputs.p1.curAge); const p1_oasRange = getValidRange(oasRange, inputs.p1.curAge);
+        const p2_cppRange = inputs.isCouple ? getValidRange(cppRange, inputs.p2.curAge) : [65]; const p2_oasRange = inputs.isCouple ? getValidRange(oasRange, inputs.p2.curAge) : [65];
+        
+        if(p1_cppRange.length===0) p1_cppRange.push(inputs.p1.cppAge); if(p1_oasRange.length===0) p1_oasRange.push(inputs.p1.oasAge);
+        if(inputs.isCouple && p2_cppRange.length===0) p2_cppRange.push(inputs.p2.cppAge); if(inputs.isCouple && p2_oasRange.length===0) p2_oasRange.push(inputs.p2.oasAge);
+
+        for(let c1 of p1_cppRange) {
+            for(let o1 of p1_oasRange) {
+                if (inputs.isCouple) {
+                    for(let c2 of p2_cppRange) {
+                        for(let o2 of p2_oasRange) {
+                            inputs.p1.cppAge = c1; inputs.p1.oasAge = o1; inputs.p2.cppAge = c2; inputs.p2.oasAge = o2;
+                            let res = runSimulationEngine(inputs, false);
+                            let score = (res.ranOutAge === null ? 1000 : res.ranOutAge) * 100000000 + res.finalAssets;
+                            if(score > maxScore) { maxScore = score; bestCombo = {c1, o1, c2, o2}; }
+                        }
+                    }
+                } else {
+                    inputs.p1.cppAge = c1; inputs.p1.oasAge = o1;
+                    let res = runSimulationEngine(inputs, false);
+                    let score = (res.ranOutAge === null ? 1000 : res.ranOutAge) * 100000000 + res.finalAssets;
+                    if(score > maxScore) { maxScore = score; bestCombo = {c1, o1}; }
+                }
+            }
+        }
+        
+        if(bestCombo) {
+            document.getElementById('p1_cppAge').value = bestCombo.c1; document.getElementById('p1_oasAge').value = bestCombo.o1;
+            if (inputs.isCouple) { document.getElementById('p2_cppAge').value = bestCombo.c2; document.getElementById('p2_oasAge').value = bestCombo.o2; }
+            btn.innerHTML = '✅ Optimized! Chart Updated.';
+            btn.style.backgroundColor = 'var(--success)';
+            btn.style.color = 'white';
+            runRetirementSimulation(); 
+        } else {
+            btn.innerHTML = '⚠️ Optimization Failed';
+        }
+        
+        setTimeout(() => { 
+            btn.innerHTML = '✨ Auto-Optimize Start Ages'; 
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
+        }, 3000);
+        
+    }, 50);
 }
 
 // Initialize the UI on load
 setMode('individual');
 generateEventFields();
+togglePensionFields('p1');
 </script>
 </body>
 </html>

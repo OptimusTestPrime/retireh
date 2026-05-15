@@ -101,7 +101,6 @@
     </div>
 
     <form id="retirementForm">
-        <!-- Section 1 -->
         <div class="form-section">
             <h2>1. Timeline & Income</h2>
             <div class="flex-row">
@@ -144,7 +143,6 @@
             </div>
         </div>
 
-        <!-- Section 2 -->
         <div class="form-section">
             <h2>2. Economic Assumptions</h2>
             <div class="flex-row">
@@ -166,7 +164,6 @@
             </div>
         </div>
 
-        <!-- Section 3 -->
         <div class="form-section">
             <h2>3. Personal Savings & Contributions</h2>
             <h3 class="partner-label p1-label">Partner 1</h3>
@@ -196,7 +193,6 @@
             </div>
         </div>
 
-        <!-- Section 4 -->
         <div class="form-section">
             <h2>4. One-Time Events (Windfalls or Expenses)</h2>
             <label>How many specific events do you want to model?</label>
@@ -212,7 +208,6 @@
             <div id="dynamicEventsContainer"></div>
         </div>
         
-        <!-- Section 5 -->
         <div class="form-section">
             <h2>5. Government Benefits (CPP & OAS)</h2>
             <h3 class="partner-label p1-label">Partner 1</h3>
@@ -247,7 +242,6 @@
             </div>
         </div>
 
-        <!-- Section 6: Pensions -->
         <div class="form-section">
             <h2>6. Employer Pensions (PSSA Logic)</h2>
             <h3 class="partner-label p1-label">Partner 1</h3>
@@ -296,7 +290,6 @@
             </div>
         </div>
 
-        <!-- Section 7 -->
         <div class="form-section">
             <h2>7. Annuity Purchase (Optional)</h2>
             <p style="font-size: 0.9em; margin-top: 0; color: #555;">Model trading a portion of your savings for guaranteed, lifelong income.</p>
@@ -336,7 +329,6 @@
             </div>
         </div>
 
-        <!-- Section 8 -->
         <div class="form-section">
             <h2>8. Goals (Income & Estate)</h2>
             <div class="flex-row">
@@ -371,40 +363,73 @@
     <footer>
         <p>&copy; 2026 RetirEh Planner.</p>
         <p><strong>Privacy Note:</strong> This tool runs entirely in your browser. No personal or financial data is collected, stored, or transmitted anywhere.</p>
-        <p><strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice.</p>
+        <p><strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice. The calculations rely on simplified assumptions regarding future inflation, market returns, and blended Canadian tax brackets, which may not accurately reflect your specific circumstances or future changes in legislation. Always consult with a certified financial planner, accountant, or qualified professional before making significant financial or retirement decisions.</p>
         <a href="https://buymeacoffee.com/coffeeforcurling" target="_blank" class="bmc-link">☕ Buy Me A Coffee</a>
     </footer>
 </div>
 
-<!-- Assumptions Modal -->
 <div id="assumptionsModal" class="modal">
     <div class="modal-content">
         <span class="close-modal" onclick="closeModal('assumptionsModal')">&times;</span>
         <h2>Assumptions & Methodology</h2>
         <p>This tool models your retirement by running a year-by-year simulation based on standard Canadian rules and your economic inputs.</p>
 
-        <h3>Staggered Retirement (Transition Phase)</h3>
-        <p>If one partner retires before the other, the simulation enters a transition phase. The working partner's "Current Net Salary" is applied to directly offset the household's desired income goal. Their RRSP/TFSA contributions also continue until they reach their designated retirement age.</p>
+        <h3>Privacy & Data Security</h3>
+        <p>This calculator is completely client-side. <strong>No personal or financial data is collected, stored, or transmitted to any server.</strong> All calculations happen securely and locally on your own device.</p>
+        
+        <h3>Household Mode & Tax Splitting</h3>
+        <p>When "Couple / Household" is selected, the engine aggregates your total required income. For calculating estimated taxes, it assumes you utilize Canadian pension income splitting provisions and evenly distributes the taxable portion of your withdrawals between both partners to minimize the household tax burden.</p>
 
-        <h3>Federal Pension (PSSA) Logic</h3>
+        <h3>Staggered Retirement (Transition Phase)</h3>
+        <p>If one partner retires before the other, the simulation enters a transition phase. The working partner's "Current Net Salary" is applied to directly offset the household's desired income goal, preventing premature depletion of your portfolio. Furthermore, the working partner's indicated monthly RRSP, TFSA, and Non-Registered contributions will continue to compound in the background until they formally reach their own retirement age.</p>
+
+        <h3>Annuities</h3>
+        <p>If modeled, the purchase cost is deducted from your chosen savings account at the specified age. To simplify the tax modeling for diverse annuity products, the resulting payout is treated as 100% taxable regular income (mirroring a standard RRSP/RRIF-funded annuity) and is dynamically added to your guaranteed income stream to reduce your reliance on portfolio withdrawals.</p>
+
+        <h3>Estate / Legacy Target</h3>
+        <p>You can optionally specify a percentage of your initial retirement savings that you wish to have remaining at the end of your projection. The calculator evaluates if your income needs will deplete your portfolio past this threshold, adjusting your plan's "success" status accordingly.</p>
+        
+        <h3>One-Time Events (Windfalls & Expenses)</h3>
         <ul>
-            <li><strong>Bridge Benefit:</strong> Paid from retirement until age 65. It represents the portion of your pension that is replaced by CPP.</li>
-            <li><strong>Group 1 (Before 2013):</strong> Unreduced pension at age 60, or age 55 with 30 years of service. Otherwise, a 5% penalty applies per year early.</li>
-            <li><strong>Group 2 (2013 or Later):</strong> Unreduced pension at age 65, or age 60 with 30 years of service. Otherwise, a 5% penalty applies per year early.</li>
+            <li><strong>Multiple Events:</strong> Model up to 10 specific life events based on Partner 1's age. Use negative numbers for planned large purchases. The model pulls expenses out of your Non-Registered savings first.</li>
+            <li><strong>Principal Residence Exemption:</strong> In Canada, the sale of your primary home is generally exempt from capital gains taxes. We deposit positive windfalls directly into your Non-Registered account without triggering a tax event.</li>
+            <li><strong>Inheritances:</strong> Canadian inheritances are modeled as tax-free cash injections, as taxes are handled by the estate prior to distribution.</li>
         </ul>
 
         <h3>Government Benefits (CPP & OAS)</h3>
         <ul>
-            <li><strong>CPP:</strong> Starts between age 60 and 70. Starting early permanently reduces your pension by 7.2% per year before 65. Delaying increases it by 8.4% per year after 65. Base assumed: ~$11,500/year at 65.</li>
-            <li><strong>OAS:</strong> Starts between age 65 and 70. Delaying increases the payout by 7.2% per year after 65. Base assumed: ~$9,100/year at 65.</li>
-            <li><strong>OAS Clawback:</strong> If your taxable income exceeds the OAS threshold (~$95,000 indexed to inflation), the government claws back 15% of the excess. This engine automatically calculates and pays this penalty.</li>
+            <li><strong>CPP (Canada Pension Plan):</strong> Can be started between age 60 and 70. Starting early permanently reduces your pension by 7.2% per year before 65. Delaying increases it by 8.4% per year after 65. We assume an average base payout of ~$11,500/year (today's dollars) at age 65.</li>
+            <li><strong>OAS (Old Age Security):</strong> Can be started between age 65 and 70. Delaying increases the payout by 7.2% per year after 65. We assume a full base payout of ~$9,100/year (today's dollars) at age 65.</li>
+            <li><strong>OAS Clawback (Recovery Tax):</strong> If your taxable income exceeds the OAS threshold (~$95,000 in today's dollars), the government claws back 15% of the excess, up to the full amount of your OAS. <em>Our engine accurately models this. It dynamically indexes the $95k threshold to inflation and automatically calculates the 15% penalty if your taxable withdrawals cross the line, grossing up your savings withdrawals to cover the difference.</em></li>
         </ul>
 
+        <h3>Employer Pension Rules</h3>
+        <ul>
+            <li><strong>Federal (PSSA):</strong> Applies a 5% penalty per year if you collect before age 60 (Group 1) or 65 (Group 2), unless you have 30 years of service. An estimated bridge benefit is paid until age 65.</li>
+            <li><strong>Provincial (85 Factor):</strong> Applies a 3% penalty for every year you are short of reaching 85 points (Age + Years of Service) or age 65.</li>
+        </ul>
+
+        <h3>Taxation & Withdrawal Strategy</h3>
+        <p style="margin-top: 10px; margin-bottom: 5px;">The engine calculates the "Gross" amount you need to withdraw to pay the CRA and hit your target <strong>Net</strong> income:</p>
+        <ul>
+            <li><strong>Account Treatment:</strong> 
+                <ul style="margin-top: 5px; list-style-type: circle;">
+                    <li><em>Pensions, Annuities, CPP, OAS, and RRSP/RRIF:</em> Treated as 100% taxable regular income.</li>
+                    <li><em>TFSA:</em> Treated as 100% tax-free.</li>
+                    <li><em>Non-Registered:</em> Approximated as 25% taxable (assuming half tax-free principal and half capital gains at a 50% inclusion rate).</li>
+                </ul>
+            </li>
+            <li><strong>Tax Brackets:</strong> The model uses an estimated blended Fed/Prov tax profile, applying a tax-free Basic Personal Amount (~$15,500). <em>These brackets are indexed to your inflation rate yearly to prevent artificial "bracket creep."</em></li>
+        </ul>
+
+        <div class="disclaimer-box">
+            <strong>Disclaimer:</strong> This tool is for educational and illustrative purposes only and does not constitute professional financial, tax, or legal advice. The calculations rely on simplified assumptions regarding future inflation, market returns, and blended Canadian tax brackets, which may not accurately reflect your specific circumstances or future changes in legislation. Always consult with a certified financial planner, accountant, or qualified professional before making significant financial or retirement decisions.
+        </div>
+        
         <button class="btn-main" onclick="closeModal('assumptionsModal')" style="margin-top:20px; font-size:16px;">I Understand</button>
     </div>
 </div>
 
-<!-- Budget Estimator Modal -->
 <div id="budgetModal" class="modal">
     <div class="modal-content" style="max-width: 700px;">
         <span class="close-modal" onclick="closeModal('budgetModal')">&times;</span>
